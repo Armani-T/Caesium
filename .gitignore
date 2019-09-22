@@ -1,0 +1,17 @@
+# Python Cruft
+venv/
+*.py[co]
+
+# IDE Cruft
+.idea/
+.vscode/
+
+# Tool Cruft
+.mypy_cache/
+.pytest_cache/
+.test_cache/
+site/
+.pylintrc
+.coverage
+mkdocs.yml
+pytest.ini
