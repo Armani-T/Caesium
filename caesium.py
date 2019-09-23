@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 from collections import namedtuple
-from collections.abc import Sequence, Iterator
-from datetime import datetime
+from collections.abc import Iterator, Sequence
 from re import IGNORECASE, compile as re_compile
 from sys import platform, stdin, stdout
 
 NAME = "Caesium"
-VERSION = "0.1.1"
+VERSION = "v0.1.2"
 KEYWORDS = ("true", "false", "and", "or", "not", "xor")
 PROMPT = "\n>> "
 REGEX_TOKENS = "|".join(
@@ -70,6 +69,8 @@ def parse_expr(expr: Sequence) -> bool:
         is empty.
     """
     tokens = tuple(expr)
+    if not tokens:
+        return None
     if len(tokens) == 1:
         return parse_name(tokens[0].text)
     return parse_operation(tokens)
@@ -185,10 +186,28 @@ def do_xor(expr: Sequence) -> bool:
     return (left or right) and not (left and right)
 
 
+def run_prompt(line: str) -> str:
+    """Get code from the prompt, run then return it."""
+    try:
+        tokens = tokenize(line.strip())
+        value = parse_expr(tokens)
+
+    except (SyntaxError, NameError) as error:
+        stdout.write("Error: %s" % error.args[0])
+        return ""
+    except KeyError as error:
+        stdout.write('Error: Undefined name "%s" entered.' % error.args[0])
+        return ""
+
+    else:
+        store_name("_", value)
+        return str(value)
+
+
 def main() -> None:
     """Start and manage the language's REPL."""
     stdout.write(
-        "%s version %s running on %s.\nPress Ctrl+C to exit."
+        "%s %s running on %s.\nPress Ctrl+C to exit."
         % (NAME, VERSION, platform)
     )
     running = True
@@ -196,23 +215,13 @@ def main() -> None:
     while running:
         try:
             stdout.write(PROMPT)
-            line = stdin.readline().strip()
-            if not line:
-                continue
-            tokens = tokenize(line.strip())
-            value = parse_expr(tokens)
+            line = stdin.readline()
+            if line:
+                stdout.write(run_prompt(line))
 
-        except (SyntaxError, NameError) as error:
-            stdout.write("Error: %s" % error.args[0])
-        except KeyError as error:
-            stdout.write('Error: Undefined name "%s" entered.' % error.args[0])
         except KeyboardInterrupt:
             stdout.write("\nExiting...\n")
             running = False
-
-        else:
-            store_name("_", value)
-            stdout.write(str(value))
 
 
 if __name__ == "__main__":

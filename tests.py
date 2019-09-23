@@ -111,7 +111,15 @@ def test_tokenize(source: str, tokens: tuple):
     assert stream == tokens
 
 
-@mark.parametrize("line", ("E_VAR = e_var = TRUE", "true", "a_var ^ quux"))
+@mark.parametrize(
+    "line",
+    (
+        "E_VAR = e_var = TRUE",
+        "true",
+        "!(a_var)",
+        "quux = (foo = True) ^ (bar = False)",
+    ),
+)
 def test_parse_expr(line: str):
     tokens = tuple(caesium.tokenize(line))
     assert caesium.parse_expr(tokens)

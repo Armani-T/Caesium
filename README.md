@@ -45,7 +45,7 @@ All operators except `NOT` are put between their arguments since they are binary
 `NOT` is a unary operator, it is put before its parameter.
 
 ```
-Caesium v0.1.1 running on win32.
+Caesium v0.1.2 running on win32.
 Press Ctrl+C to exit.
 >> !True
 False
