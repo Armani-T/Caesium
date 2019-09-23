@@ -116,7 +116,7 @@ def test_tokenize(source: str, tokens: tuple):
     (
         "E_VAR = e_var = TRUE",
         "true",
-        "!(a_var)",
+        "!!(a_var)",
         "quux = (foo = True) ^ (bar = False)",
     ),
 )

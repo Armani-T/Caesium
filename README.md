@@ -45,7 +45,7 @@ All operators except `NOT` are put between their arguments since they are binary
 `NOT` is a unary operator, it is put before its parameter.
 
 ```
-Caesium v0.1.2 running on win32.
+Caesium v0.1.3 running on win32.
 Press Ctrl+C to exit.
 >> !True
 False
@@ -64,7 +64,7 @@ Exiting...
 ## Coming Soon
 
 - [] A proper parse tree (to get rid of some annoying errors).
-- [] A better exit mechanism (preferrably as a function).
+- [x] An alternative exit mechanism (preferrably as a function).
 - [] Conditional expressions.
 
 ## Contributing

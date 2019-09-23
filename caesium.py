@@ -5,8 +5,8 @@ from re import IGNORECASE, compile as re_compile
 from sys import platform, stdin, stdout
 
 NAME = "Caesium"
-VERSION = "v0.1.2"
-KEYWORDS = ("true", "false", "and", "or", "not", "xor")
+VERSION = "v0.1.3"
+KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit")
 PROMPT = "\n>> "
 REGEX_TOKENS = "|".join(
     (
@@ -90,12 +90,19 @@ def parse_name(name: str) -> bool:
     bool
         The name's evaluated value.
     """
-    var = name.lower()
-    if var in ("true", "1"):
-        return True
-    if var in ("false", "0"):
-        return False
-    return get_name(var)
+    def stop() -> None:
+        import sys
+        stdout.write("\nExiting...\n")
+        sys.exit(0)
+
+    name = name.lower()
+    return {
+        "true": lambda _: True,
+        "1": lambda _: True,
+        "false": lambda _: False,
+        "0": lambda _: False,
+        "exit": lambda _: stop(),
+    }.get(name, get_name)(name)
 
 
 def parse_operation(expr: Sequence) -> bool:
