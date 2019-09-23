@@ -1,6 +1,6 @@
 # Caesium README
 
-A simple "calc" for Boolean Algebra. It is based on the idea that this language should be as compatible as possible with other languages. The implementation provided is in python.
+A simple language for running Boolean algebraic expressions. It is based on the idea that this language should be as compatible as possible with other languages. I built it to run my own Boolean expressions for prototyping complex if statements. The implementation provided is in `python`.
 
 ## Installation
 
@@ -14,7 +14,7 @@ A simple "calc" for Boolean Algebra. It is based on the idea that this language 
 
 ### Starting the Prompt
 
-As of now there are 2 ways to start the Caesium prompt:
+As of now, there are 2 ways to start the Caesium prompt:
 - Running `./caesium.sh` on `bash`  from the project's  root directory.
 - Running `python caesium.py` from the project's  root directory.
 
@@ -44,6 +44,10 @@ Parentheses (`()`) are used to group operations.
 All operators except `NOT` are put between their arguments since they are binary.
 `NOT` is a unary operator, it is put before its parameter.
 
+### Closing the Prompt
+
+Th prompt will be closed if you type in `exit` and press Enter. You can also close it by holding the Ctrl button and clicking C. After doing that, you will be taken back to the normal shell.
+
 ```
 Caesium v0.1.3 running on win32.
 Press Ctrl+C to exit.
@@ -51,21 +55,20 @@ Press Ctrl+C to exit.
 False
 >> false & TRUE
 False
->> True | False
+>> TRUE | False
 True
 >> False ^ (y = True)
 True
 >> x = !((True & False) | y) ^ False
 False
->> 
+>> exit
 Exiting...
 ```
 
 ## Coming Soon
 
-- [] A proper parse tree (to get rid of some annoying errors).
-- [x] An alternative exit mechanism (preferrably as a function).
-- [] Conditional expressions.
+- A proper parse tree (to get rid of some annoying errors).
+- Conditional expressions.
 
 ## Contributing
 

@@ -2,10 +2,10 @@
 from collections import namedtuple
 from collections.abc import Iterator, Sequence
 from re import IGNORECASE, compile as re_compile
-from sys import platform, stdin, stdout
+from sys import platform, stderr, stdin, stdout
 
 NAME = "Caesium"
-VERSION = "v0.1.3"
+VERSION = "v0.1.4"
 KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit")
 PROMPT = "\n>> "
 REGEX_TOKENS = "|".join(
@@ -92,7 +92,7 @@ def parse_name(name: str) -> bool:
     """
     def stop() -> None:
         import sys
-        stdout.write("\nExiting...\n")
+        stdout.write("Exiting...\n")
         sys.exit(0)
 
     name = name.lower()
@@ -125,7 +125,7 @@ def parse_operation(expr: Sequence) -> bool:
         return not parse_expr(expr[1:])
 
     if expr[1].type == "EQUALS":
-        return parse_assign(expr)
+        return do_assignment(expr)
 
     if expr[1].type == "AND":
         return do_and(expr)
@@ -140,9 +140,10 @@ def parse_operation(expr: Sequence) -> bool:
     raise SyntaxError('Illegal expression: "%s".' % line)
 
 
-def parse_assign(expr: Sequence) -> bool:
+def do_assignment(expr: Sequence) -> bool:
     """
     Evaluate and carry out an assignment expression.
+
     Parameters
     ----------
     expr
@@ -190,7 +191,7 @@ def do_xor(expr: Sequence) -> bool:
     """Evaluate the value of an XOR expression."""
     left = parse_name(expr[0].text)
     right = parse_expr(expr[2:])
-    return (left or right) and not (left and right)
+    return (left or right) and (not (left and right))
 
 
 def run_prompt(line: str) -> str:
@@ -199,11 +200,13 @@ def run_prompt(line: str) -> str:
         tokens = tokenize(line.strip())
         value = parse_expr(tokens)
 
-    except (SyntaxError, NameError) as error:
-        stdout.write("Error: %s" % error.args[0])
-        return ""
-    except KeyError as error:
-        stdout.write('Error: Undefined name "%s" entered.' % error.args[0])
+    except (SyntaxError, NameError, KeyError) as error:
+        if isinstance(error, KeyError):
+            msg = 'Error: Undefined name "%s" entered.' % error.args[0]
+        else:
+            msg = "Error: %s" % error.args[0]
+
+        stderr.write(msg)
         return ""
 
     else:
