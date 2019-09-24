@@ -2,7 +2,7 @@
 from collections import namedtuple
 from collections.abc import Iterator, Sequence
 from re import IGNORECASE, compile as re_compile
-from sys import platform, stderr, stdin, stdout
+from sys import platform, stdin, stdout
 
 NAME = "Caesium"
 VERSION = "v0.1.4"
@@ -167,7 +167,7 @@ def do_assignment(expr: Sequence) -> bool:
 def do_parens(expr: Sequence) -> bool:
     """Evaluate the expression inside a pair of parentheses."""
     skips = expr.count(Token("LPAREN", "(")) - 1
-    rparen_index = expr.index(Token("RPAREN", ")"))
+    rparen_index = expr.index(Token("RPAREN", ")")) - 1
     while skips > 0:
         lparen_index = expr.index(Token("LPAREN", "("))
         expr_ = expr[lparen_index:]
@@ -206,7 +206,7 @@ def run_prompt(line: str) -> str:
         else:
             msg = "Error: %s" % error.args[0]
 
-        stderr.write(msg)
+        stdout.write(msg)
         return ""
 
     else:

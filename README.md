@@ -49,7 +49,7 @@ All operators except `NOT` are put between their arguments since they are binary
 Th prompt will be closed if you type in `exit` and press Enter. You can also close it by holding the Ctrl button and clicking C. After doing that, you will be taken back to the normal shell.
 
 ```
-Caesium v0.1.3 running on win32.
+Caesium v0.1.4 running on linux.
 Press Ctrl+C to exit.
 >> !True
 False
