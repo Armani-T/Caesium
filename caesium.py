@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from argparse import ArgumentParser
 from collections import namedtuple
 from collections.abc import Iterator, Sequence
 from re import IGNORECASE, compile as re_compile
@@ -90,8 +91,10 @@ def parse_name(name: str) -> bool:
     bool
         The name's evaluated value.
     """
+
     def stop() -> None:
         import sys
+
         stdout.write("Exiting...\n")
         sys.exit(0)
 
@@ -235,4 +238,17 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser(prog=NAME)
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="store_true",
+        help="Print Caesium's version number.",
+    )
+    parser.add_argument(
+        "-e",
+        "--expr",
+        default=None,
+        help="Run the provided expression, print the result and exit.",
+    )
+    args = parser.parse_args()

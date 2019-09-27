@@ -152,9 +152,9 @@ def test_parse_operation(expr: str, expected: bool):
         ("F_VAR = f_var = FALSE", False),
     ),
 )
-def test_parse_assign(expr: str, expected: bool) -> None:
+def test_do_assignment(expr: str, expected: bool) -> None:
     tokens = tuple(caesium.tokenize(expr))
-    result = caesium.parse_assign(tokens)
+    result = caesium.do_assignment(tokens)
     assert result is caesium.get_name(tokens[0].text)
     assert caesium.get_name(tokens[0].text) is expected
 
