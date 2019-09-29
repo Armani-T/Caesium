@@ -250,5 +250,15 @@ if __name__ == "__main__":
         "--expr",
         default=None,
         help="Run the provided expression, print the result and exit.",
+        nargs="+",
     )
     args = parser.parse_args()
+
+    if args.version:
+        stdout.write("%s %s\n" % (NAME, VERSION))
+    elif args.expr is not None:
+        value = parse_expr(tokenize(args.expr.strip()))
+        stdout.write(str(value))
+        stdout.write("\n")
+    else:
+        main()
