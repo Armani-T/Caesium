@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+from argparse import ArgumentParser
 from collections import namedtuple
 from collections.abc import Iterator, Sequence
 from re import IGNORECASE, compile as re_compile
 from sys import platform, stdin, stdout
 
 NAME = "Caesium"
-VERSION = "v0.1.4"
+VERSION = "v0.2.0"
 KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit")
 PROMPT = "\n>> "
 REGEX_TOKENS = "|".join(
@@ -90,8 +91,10 @@ def parse_name(name: str) -> bool:
     bool
         The name's evaluated value.
     """
+
     def stop() -> None:
         import sys
+
         stdout.write("Exiting...\n")
         sys.exit(0)
 
@@ -235,4 +238,27 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser(prog=NAME)
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="store_true",
+        help="Print Caesium's version number.",
+    )
+    parser.add_argument(
+        "-e",
+        "--expr",
+        default=None,
+        help="Run the provided expression, print the result and exit.",
+        nargs="+",
+    )
+    args = parser.parse_args()
+
+    if args.version:
+        stdout.write("%s %s\n" % (NAME, VERSION))
+    elif args.expr is not None:
+        value = parse_expr(tokenize(args.expr.strip()))
+        stdout.write(str(value))
+        stdout.write("\n")
+    else:
+        main()

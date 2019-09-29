@@ -52,7 +52,7 @@ As you may have noticed, when you type in a wrong expression (like if a closing 
 Typing in `Control-C` at the prompt exits the interpreter. If that doesn't work, you can exit the interpreter by typing in `exit`. Using either route, the interpreter should print `Exiting...` then stop running.
 
 ```
-Caesium v0.1.4 running on linux.
+Caesium v0.2.0 running on linux.
 Press Ctrl+C to exit.
 >> !True
 False
@@ -72,9 +72,6 @@ Exiting...
 
 - A proper parse tree.
 - Conditional expressions.
-- Command line flags for:
-  - Checking version
-  - Running a single command
 
 ## Contributing
 
