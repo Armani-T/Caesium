@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
 from collections import namedtuple
-from collections.abc import Sequence
 from re import IGNORECASE, compile as re_compile
 from random import choice
 from sys import platform, stdin, stdout
+from typing import Generator, Iterable, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "v0.3.1"
+PROGRAM_NAME, VERSION = "caesium", "v0.3.2"
 KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit", "random")
 PROMPT = "\n>> "
 REGEX_TOKENS = "|".join(
@@ -34,7 +34,7 @@ get_name = lambda name: runtime_vars[name.lower()]
 store_name = lambda name, value: runtime_vars.update({name.lower(): value})
 
 
-def tokenize(text: str, regex=MASTER_REGEX) -> Sequence:
+def tokenize(text: str) -> Generator[Token, None, None]:
     """
     Convert the source code into a stream of tokens.
 
@@ -50,7 +50,7 @@ def tokenize(text: str, regex=MASTER_REGEX) -> Sequence:
     Token
         A namedtuple with only 2 attributes: `type` and `text`.
     """
-    scanner = regex.scanner(text)
+    scanner = MASTER_REGEX.scanner(text)
     for match in iter(scanner.match, None):
         if match.lastgroup == "INVALID_CHAR":
             raise SyntaxError('Invalid syntax: "%s".' % match.group())
@@ -58,7 +58,7 @@ def tokenize(text: str, regex=MASTER_REGEX) -> Sequence:
             yield Token(match.lastgroup, match.group())
 
 
-def parse_expr(expr: Sequence) -> bool:
+def parse_expr(expr: Iterable[Token]) -> bool:
     """
     Evaluate a single expression consisting of tokens.
 
@@ -74,7 +74,7 @@ def parse_expr(expr: Sequence) -> bool:
     """
     tokens = tuple(expr)
     if not tokens:
-        return None
+        raise SyntaxError("Empty expression.")
     if len(tokens) == 1:
         return parse_name(tokens[0].text)
     return parse_operation(tokens)
@@ -95,7 +95,7 @@ def parse_name(name: str) -> bool:
         The name's evaluated value.
     """
 
-    def stop() -> None:
+    def stop():
         import sys
 
         stdout.write("Exiting...\n")
@@ -112,7 +112,7 @@ def parse_name(name: str) -> bool:
     }.get(name, get_name)(name)
 
 
-def parse_operation(expr: Sequence) -> bool:
+def parse_operation(expr: Sequence[Token]) -> bool:
     """
     Evaluate part of or the whole of an expression.
 
@@ -144,10 +144,10 @@ def parse_operation(expr: Sequence) -> bool:
         return do_xor(expr)
 
     line = " ".join((token.text for token in expr))
-    raise SyntaxError('Illegal expression: "%s".' % line)
+    raise SyntaxError('Invalid syntax: "%s".' % line)
 
 
-def do_assignment(expr: Sequence) -> bool:
+def do_assignment(expr: Sequence[Token]) -> bool:
     """
     Evaluate and carry out an assignment expression.
 
@@ -171,7 +171,7 @@ def do_assignment(expr: Sequence) -> bool:
     return var_value
 
 
-def do_parens(expr: Sequence) -> bool:
+def do_parens(expr: Sequence[Token]) -> bool:
     """Evaluate the expression inside a pair of parentheses."""
     skips = expr.count(Token("LPAREN", "(")) - 1
     rparen_index = expr.index(Token("RPAREN", ")"))
@@ -184,17 +184,17 @@ def do_parens(expr: Sequence) -> bool:
     return parse_expr(expr[1:rparen_index])
 
 
-def do_and(expr: Sequence) -> bool:
+def do_and(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an AND expression."""
     return parse_name(expr[0].text) and parse_expr(expr[2:])
 
 
-def do_or(expr: Sequence) -> bool:
+def do_or(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an OR expression."""
     return parse_name(expr[0].text) or parse_expr(expr[2:])
 
 
-def do_xor(expr: Sequence) -> bool:
+def do_xor(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an XOR expression."""
     left = parse_name(expr[0].text)
     right = parse_expr(expr[2:])

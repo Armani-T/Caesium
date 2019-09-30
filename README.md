@@ -6,7 +6,8 @@ Caesium is a simple language for evaluating expressions from Boolean algebra. I 
 
 1. Ensure that you have a working version of python3 (If not, you can get it from the [official site](https://www.python.org)).
 2. Just clone the repo using `git clone`.
-3. **This step should only be followed if you know what you're doing**. Add a line in your shell's rcfile saying `alias caesium="python3 /path/to/project/caesium.py"` and replace `path/to/project/` with the actual path to the project's root folder. You should now be able to start the prompt by running `caesium` from your shell.
+3. Install the dependencies by navigating to the project's root folder and running `pip install -r requirements.txt`.
+4. **This step should only be followed if you know what you're doing**. Add a line in your shell's rcfile saying `alias caesium="python3 /path/to/project/caesium.py"` and replace `path/to/project/` with the absolute path to the project's root folder. You should now be able to start the prompt by running `caesium` from your shell.
 
 ## Usage
 
@@ -16,18 +17,18 @@ You can start the prompt by running `caesium`. Please note that this route only 
 
 You may also start it by running `python3 ./caesium.py` from the root directory of the project.
 
-Example:
+Examples:
 
 ```
 $ ./caesium.sh
-caesium v0.3.1 running on win32.
+caesium v0.3.2 running on linux.
 Press Ctrl+C to exit.
 >> 
 ```
 
 ```
 $ caesium
-caesium v0.3.1 running on linux.
+caesium v0.3.2 running on win32.
 Press Ctrl+C to exit.
 >> 
 ```
@@ -146,7 +147,6 @@ $
 ## TODO
 
 - [ ] Add a proper parse tree.
-- [ ] Add a way to start the prompt by just typing `caesium`.
 - [ ] Add tests for the parts which use argparse.
 - [ ] A standalone executable for those who don't want to install python.
 
