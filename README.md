@@ -6,29 +6,28 @@ Caesium is a simple language for evaluating expressions from Boolean algebra. I 
 
 1. Ensure that you have a working version of python3 (If not, you can get it from the [official site](https://www.python.org)).
 2. Just clone the repo using `git clone`.
-3. **This step should only be followed if you know what you're doing**. Add a line in your shell's rcfile saying `alias caesium="python3 /path/to/project/caesium.py"` and replace `path/to/project` with the actual path to the project folder. Note that this method only works on UNIX machines. You should now be able to start the prompt by running `caesium`.
+3. **This step should only be followed if you know what you're doing**. Add a line in your shell's rcfile saying `alias caesium="python3 /path/to/project/caesium.py"` and replace `path/to/project/` with the actual path to the project's root folder. You should now be able to start the prompt by running `caesium` from your shell.
 
 ## Usage
 
 ### Starting the Prompt
 
-As of now, there are 2 ways to start the prompt:
+You can start the prompt by running `caesium`. Please note that this route only works if you followed Step 3 of the Installation guide.
 
-- Running `./caesium.sh` from the project's root directory on a UNIX shell (e.g. `bash` or `fish`).
-- Running `caesium` from the command line. Note that this route only works if you followed Step 3 of the Installation guide.
+You may also start it by running `python3 ./caesium.py` from the root directory of the project.
 
 Example:
 
 ```
 $ ./caesium.sh
-caesium v0.3.0 running on linux.
+caesium v0.3.1 running on win32.
 Press Ctrl+C to exit.
 >> 
 ```
 
 ```
 $ caesium
-caesium v0.3.0 running on linux.
+caesium v0.3.1 running on linux.
 Press Ctrl+C to exit.
 >> 
 ```
@@ -59,7 +58,7 @@ Assignment is done by putting a valid identifier on the left, a value or an expr
 ```
 >> foo = True
 True
->> quux = foo_bar = (True ^ (foo = True)) & False
+>> quux = foo_bar = (True ^ (bar = True)) & False
 False
 ```
 
@@ -146,8 +145,10 @@ $
 
 ## TODO
 
-- Add a proper parse tree.
-- Add a way to start the prompt by just typing `caesium`.
+- [ ] Add a proper parse tree.
+- [ ] Add a way to start the prompt by just typing `caesium`.
+- [ ] Add tests for the parts which use argparse.
+- [ ] A standalone executable for those who don't want to install python.
 
 ## Development Setup
 

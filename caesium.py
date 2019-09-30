@@ -183,6 +183,7 @@ def do_parens(expr: Sequence) -> bool:
 
     return parse_expr(expr[1:rparen_index])
 
+
 def do_and(expr: Sequence) -> bool:
     """Evaluate the value of an AND expression."""
     return parse_name(expr[0].text) and parse_expr(expr[2:])
@@ -203,15 +204,15 @@ def do_xor(expr: Sequence) -> bool:
 def run_prompt(line: str) -> str:
     """Get code from the prompt, run then return it."""
     try:
-        tokens = tokenize(line.strip())
+        tokens = tokenize(line)
         return str(parse_expr(tokens)) or ""
 
-    except (SyntaxError, NameError, KeyError) as error:
-        if isinstance(error, KeyError):
-            stdout.write('Undefined name "%s".' % error.args[0])
-        else:
-            stdout.write(error.args[0])
-        return ""
+    except (SyntaxError, NameError) as error:
+        return error.args[0]
+    except KeyError as error:
+        return 'Undefined name "%s".' % error.args[0]
+    except ValueError:
+        return "Unmatched bracket in expression."
 
 
 def main() -> None:
@@ -227,7 +228,7 @@ def main() -> None:
             line = stdin.readline()
             if line:
                 expr_value = run_prompt(line)
-                stdout.write("" if expr_value is None else expr_value)
+                stdout.write(expr_value)
 
         except KeyboardInterrupt:
             stdout.write("\nExiting...\n")
