@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
+from argparse import ArgumentParser
 from collections import namedtuple
-from collections.abc import Sequence, Iterator
-from datetime import datetime
 from re import IGNORECASE, compile as re_compile
+from random import choice
 from sys import platform, stdin, stdout
+from typing import Generator, Iterable, Sequence
 
-NAME = "Caesium"
-VERSION = "0.1.1"
-KEYWORDS = ("true", "false", "and", "or", "not", "xor")
+PROGRAM_NAME, VERSION = "caesium", "v0.3.2"
+KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit", "random")
 PROMPT = "\n>> "
 REGEX_TOKENS = "|".join(
     (
@@ -21,6 +21,7 @@ REGEX_TOKENS = "|".join(
         r"(?P<RPAREN>\))",
         r"(?P<WHITESPACE>\s+)",
         r"(?P<COMMENT>#(.)*?\n)",
+        r"(?P<INVALID_CHAR>.)",
     )
 )
 MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
@@ -33,7 +34,7 @@ get_name = lambda name: runtime_vars[name.lower()]
 store_name = lambda name, value: runtime_vars.update({name.lower(): value})
 
 
-def tokenize(text: str, regex=MASTER_REGEX) -> Iterator:
+def tokenize(text: str) -> Generator[Token, None, None]:
     """
     Convert the source code into a stream of tokens.
 
@@ -49,13 +50,15 @@ def tokenize(text: str, regex=MASTER_REGEX) -> Iterator:
     Token
         A namedtuple with only 2 attributes: `type` and `text`.
     """
-    scanner = regex.scanner(text)
+    scanner = MASTER_REGEX.scanner(text)
     for match in iter(scanner.match, None):
+        if match.lastgroup == "INVALID_CHAR":
+            raise SyntaxError('Invalid syntax: "%s".' % match.group())
         if match.lastgroup not in ("COMMENT", "WHITESPACE"):
             yield Token(match.lastgroup, match.group())
 
 
-def parse_expr(expr: Sequence) -> bool:
+def parse_expr(expr: Iterable[Token]) -> bool:
     """
     Evaluate a single expression consisting of tokens.
 
@@ -70,6 +73,8 @@ def parse_expr(expr: Sequence) -> bool:
         is empty.
     """
     tokens = tuple(expr)
+    if not tokens:
+        raise SyntaxError("Empty expression.")
     if len(tokens) == 1:
         return parse_name(tokens[0].text)
     return parse_operation(tokens)
@@ -89,15 +94,25 @@ def parse_name(name: str) -> bool:
     bool
         The name's evaluated value.
     """
-    var = name.lower()
-    if var in ("true", "1"):
-        return True
-    if var in ("false", "0"):
-        return False
-    return get_name(var)
+
+    def stop():
+        import sys
+
+        stdout.write("Exiting...\n")
+        sys.exit(0)
+
+    name = name.lower()
+    return {
+        "true": lambda _: True,
+        "1": lambda _: True,
+        "false": lambda _: False,
+        "0": lambda _: False,
+        "exit": lambda _: stop(),
+        "random": lambda _: choice((True, False)),
+    }.get(name, get_name)(name)
 
 
-def parse_operation(expr: Sequence) -> bool:
+def parse_operation(expr: Sequence[Token]) -> bool:
     """
     Evaluate part of or the whole of an expression.
 
@@ -117,7 +132,7 @@ def parse_operation(expr: Sequence) -> bool:
         return not parse_expr(expr[1:])
 
     if expr[1].type == "EQUALS":
-        return parse_assign(expr)
+        return do_assignment(expr)
 
     if expr[1].type == "AND":
         return do_and(expr)
@@ -129,12 +144,13 @@ def parse_operation(expr: Sequence) -> bool:
         return do_xor(expr)
 
     line = " ".join((token.text for token in expr))
-    raise SyntaxError('Illegal expression: "%s".' % line)
+    raise SyntaxError('Invalid syntax: "%s".' % line)
 
 
-def parse_assign(expr: Sequence) -> bool:
+def do_assignment(expr: Sequence[Token]) -> bool:
     """
     Evaluate and carry out an assignment expression.
+
     Parameters
     ----------
     expr
@@ -155,7 +171,7 @@ def parse_assign(expr: Sequence) -> bool:
     return var_value
 
 
-def do_parens(expr: Sequence) -> bool:
+def do_parens(expr: Sequence[Token]) -> bool:
     """Evaluate the expression inside a pair of parentheses."""
     skips = expr.count(Token("LPAREN", "(")) - 1
     rparen_index = expr.index(Token("RPAREN", ")"))
@@ -168,52 +184,78 @@ def do_parens(expr: Sequence) -> bool:
     return parse_expr(expr[1:rparen_index])
 
 
-def do_and(expr: Sequence) -> bool:
+def do_and(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an AND expression."""
     return parse_name(expr[0].text) and parse_expr(expr[2:])
 
 
-def do_or(expr: Sequence) -> bool:
+def do_or(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an OR expression."""
     return parse_name(expr[0].text) or parse_expr(expr[2:])
 
 
-def do_xor(expr: Sequence) -> bool:
+def do_xor(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an XOR expression."""
     left = parse_name(expr[0].text)
     right = parse_expr(expr[2:])
-    return (left or right) and not (left and right)
+    return (left or right) and (not (left and right))
+
+
+def run_prompt(line: str) -> str:
+    """Get code from the prompt, run then return it."""
+    try:
+        tokens = tokenize(line)
+        return str(parse_expr(tokens)) or ""
+
+    except (SyntaxError, NameError) as error:
+        return error.args[0]
+    except KeyError as error:
+        return 'Undefined name "%s".' % error.args[0]
+    except ValueError:
+        return "Unmatched bracket in expression."
 
 
 def main() -> None:
     """Start and manage the language's REPL."""
     stdout.write(
-        "%s version %s running on %s.\nPress Ctrl+C to exit."
-        % (NAME, VERSION, platform)
+        "%s %s running on %s.\nPress Ctrl+C to exit."
+        % (PROGRAM_NAME, VERSION, platform)
     )
     running = True
-
     while running:
         try:
             stdout.write(PROMPT)
-            line = stdin.readline().strip()
-            if not line:
-                continue
-            tokens = tokenize(line.strip())
-            value = parse_expr(tokens)
+            line = stdin.readline()
+            if line:
+                expr_value = run_prompt(line)
+                stdout.write(expr_value)
 
-        except (SyntaxError, NameError) as error:
-            stdout.write("Error: %s" % error.args[0])
-        except KeyError as error:
-            stdout.write('Error: Undefined name "%s" entered.' % error.args[0])
         except KeyboardInterrupt:
             stdout.write("\nExiting...\n")
             running = False
 
-        else:
-            store_name("_", value)
-            stdout.write(str(value))
-
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser(prog=PROGRAM_NAME)
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        help="Print %(prog)s's version number.",
+    )
+    parser.add_argument(
+        "-e",
+        "--expr",
+        default="",
+        help="Run the provided expression, print the result and exit.",
+    )
+    args = parser.parse_args()
+
+    if args.version:
+        stdout.write("%s %s\n" % (PROGRAM_NAME, VERSION))
+    elif args.expr:
+        parsed_value = parse_expr(tokenize(args.expr))
+        stdout.write(str(parsed_value))
+        stdout.write("\n")
+    else:
+        main()
