@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
 from collections import namedtuple
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from re import IGNORECASE, compile as re_compile
+from random import choice
 from sys import platform, stdin, stdout
 
-NAME = "Caesium"
-VERSION = "v0.2.0"
-KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit")
+PROGRAM_NAME, VERSION = "caesium", "v0.3.1"
+KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit", "random")
 PROMPT = "\n>> "
 REGEX_TOKENS = "|".join(
     (
@@ -21,6 +21,7 @@ REGEX_TOKENS = "|".join(
         r"(?P<RPAREN>\))",
         r"(?P<WHITESPACE>\s+)",
         r"(?P<COMMENT>#(.)*?\n)",
+        r"(?P<INVALID_CHAR>.)",
     )
 )
 MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
@@ -33,7 +34,7 @@ get_name = lambda name: runtime_vars[name.lower()]
 store_name = lambda name, value: runtime_vars.update({name.lower(): value})
 
 
-def tokenize(text: str, regex=MASTER_REGEX) -> Iterator:
+def tokenize(text: str, regex=MASTER_REGEX) -> Sequence:
     """
     Convert the source code into a stream of tokens.
 
@@ -51,6 +52,8 @@ def tokenize(text: str, regex=MASTER_REGEX) -> Iterator:
     """
     scanner = regex.scanner(text)
     for match in iter(scanner.match, None):
+        if match.lastgroup == "INVALID_CHAR":
+            raise SyntaxError('Invalid syntax: "%s".' % match.group())
         if match.lastgroup not in ("COMMENT", "WHITESPACE"):
             yield Token(match.lastgroup, match.group())
 
@@ -105,6 +108,7 @@ def parse_name(name: str) -> bool:
         "false": lambda _: False,
         "0": lambda _: False,
         "exit": lambda _: stop(),
+        "random": lambda _: choice((True, False)),
     }.get(name, get_name)(name)
 
 
@@ -170,7 +174,7 @@ def do_assignment(expr: Sequence) -> bool:
 def do_parens(expr: Sequence) -> bool:
     """Evaluate the expression inside a pair of parentheses."""
     skips = expr.count(Token("LPAREN", "(")) - 1
-    rparen_index = expr.index(Token("RPAREN", ")")) - 1
+    rparen_index = expr.index(Token("RPAREN", ")"))
     while skips > 0:
         lparen_index = expr.index(Token("LPAREN", "("))
         expr_ = expr[lparen_index:]
@@ -178,7 +182,6 @@ def do_parens(expr: Sequence) -> bool:
         skips -= 1
 
     return parse_expr(expr[1:rparen_index])
-
 
 def do_and(expr: Sequence) -> bool:
     """Evaluate the value of an AND expression."""
@@ -201,36 +204,30 @@ def run_prompt(line: str) -> str:
     """Get code from the prompt, run then return it."""
     try:
         tokens = tokenize(line.strip())
-        value = parse_expr(tokens)
+        return str(parse_expr(tokens)) or ""
 
     except (SyntaxError, NameError, KeyError) as error:
         if isinstance(error, KeyError):
-            msg = 'Error: Undefined name "%s" entered.' % error.args[0]
+            stdout.write('Undefined name "%s".' % error.args[0])
         else:
-            msg = "Error: %s" % error.args[0]
-
-        stdout.write(msg)
+            stdout.write(error.args[0])
         return ""
-
-    else:
-        store_name("_", value)
-        return str(value)
 
 
 def main() -> None:
     """Start and manage the language's REPL."""
     stdout.write(
         "%s %s running on %s.\nPress Ctrl+C to exit."
-        % (NAME, VERSION, platform)
+        % (PROGRAM_NAME, VERSION, platform)
     )
     running = True
-
     while running:
         try:
             stdout.write(PROMPT)
             line = stdin.readline()
             if line:
-                stdout.write(run_prompt(line))
+                expr_value = run_prompt(line)
+                stdout.write("" if expr_value is None else expr_value)
 
         except KeyboardInterrupt:
             stdout.write("\nExiting...\n")
@@ -238,27 +235,26 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(prog=NAME)
+    parser = ArgumentParser(prog=PROGRAM_NAME)
     parser.add_argument(
-        "-V",
+        "-v",
         "--version",
         action="store_true",
-        help="Print Caesium's version number.",
+        help="Print %(prog)s's version number.",
     )
     parser.add_argument(
         "-e",
         "--expr",
-        default=None,
+        default="",
         help="Run the provided expression, print the result and exit.",
-        nargs="+",
     )
     args = parser.parse_args()
 
     if args.version:
-        stdout.write("%s %s\n" % (NAME, VERSION))
-    elif args.expr is not None:
-        value = parse_expr(tokenize(args.expr.strip()))
-        stdout.write(str(value))
+        stdout.write("%s %s\n" % (PROGRAM_NAME, VERSION))
+    elif args.expr:
+        parsed_value = parse_expr(tokenize(args.expr))
+        stdout.write(str(parsed_value))
         stdout.write("\n")
     else:
         main()

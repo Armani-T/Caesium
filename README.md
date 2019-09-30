@@ -21,14 +21,14 @@ Example:
 
 ```
 $ ./caesium.sh
-caesium v0.2.0 running on linux.
+caesium v0.3.0 running on linux.
 Press Ctrl+C to exit.
 >> 
 ```
 
 ```
 $ caesium
-caesium v0.2.0 running on linux.
+caesium v0.3.0 running on linux.
 Press Ctrl+C to exit.
 >> 
 ```
