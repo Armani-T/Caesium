@@ -6,7 +6,7 @@ from random import choice
 from sys import platform, stdin, stdout
 from typing import Generator, Iterable, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "v0.3.2"
+PROGRAM_NAME, VERSION = "caesium", "v0.3.3"
 KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit", "random")
 PROMPT = "\n>> "
 REGEX_TOKENS = "|".join(
@@ -20,7 +20,7 @@ REGEX_TOKENS = "|".join(
         r"(?P<LPAREN>\()",
         r"(?P<RPAREN>\))",
         r"(?P<WHITESPACE>\s+)",
-        r"(?P<COMMENT>#(.)*?\n)",
+        r"(?P<COMMENT>#.*$)",
         r"(?P<INVALID_CHAR>.)",
     )
 )
@@ -42,8 +42,6 @@ def tokenize(text: str) -> Generator[Token, None, None]:
     ----------
     text
         The source code to tokenize.
-    regex
-        A compiled regex used to make the text scanner.
 
     Yields
     ------
@@ -74,7 +72,7 @@ def parse_expr(expr: Iterable[Token]) -> bool:
     """
     tokens = tuple(expr)
     if not tokens:
-        raise SyntaxError("Empty expression.")
+        raise RuntimeError
     if len(tokens) == 1:
         return parse_name(tokens[0].text)
     return parse_operation(tokens)
@@ -201,7 +199,7 @@ def do_xor(expr: Sequence[Token]) -> bool:
     return (left or right) and (not (left and right))
 
 
-def run_prompt(line: str) -> str:
+def _run_prompt(line: str) -> str:
     """Get code from the prompt, run then return it."""
     try:
         tokens = tokenize(line)
@@ -213,9 +211,11 @@ def run_prompt(line: str) -> str:
         return 'Undefined name "%s".' % error.args[0]
     except ValueError:
         return "Unmatched bracket in expression."
+    except RuntimeError:
+        return ""
 
 
-def main() -> None:
+def run_prompt() -> None:
     """Start and manage the language's REPL."""
     stdout.write(
         "%s %s running on %s.\nPress Ctrl+C to exit."
@@ -227,7 +227,7 @@ def main() -> None:
             stdout.write(PROMPT)
             line = stdin.readline()
             if line:
-                expr_value = run_prompt(line)
+                expr_value = _run_prompt(line)
                 stdout.write(expr_value)
 
         except KeyboardInterrupt:
@@ -235,27 +235,34 @@ def main() -> None:
             running = False
 
 
-if __name__ == "__main__":
+def setup_cli() -> ArgumentParser:
     parser = ArgumentParser(prog=PROGRAM_NAME)
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-v",
         "--version",
         action="store_true",
         help="Print %(prog)s's version number.",
     )
-    parser.add_argument(
+    group.add_argument(
         "-e",
         "--expr",
         default="",
-        help="Run the provided expression, print the result and exit.",
+        help="Print the result of the provided expression and exit.",
     )
-    args = parser.parse_args()
+    return parser
 
+
+def main() -> None:
+    parser = setup_cli()
+    args = parser.parse_args()
     if args.version:
         stdout.write("%s %s\n" % (PROGRAM_NAME, VERSION))
     elif args.expr:
-        parsed_value = parse_expr(tokenize(args.expr))
-        stdout.write(str(parsed_value))
-        stdout.write("\n")
+        stdout.write(str(parse_expr(tokenize(args.expr))))
     else:
-        main()
+        run_prompt()
+
+
+if __name__ == "__main__":
+    main()

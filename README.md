@@ -21,7 +21,7 @@ Example:
 
 ```
 $ caesium
-caesium v0.3.2 running on linux.
+caesium v0.3.3 running on linux.
 Press Ctrl+C to exit.
 >> 
 ```
