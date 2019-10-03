@@ -17,18 +17,11 @@ You can start the prompt by running `caesium`. Please note that this route only 
 
 You may also start it by running `python3 ./caesium.py` from the root directory of the project.
 
-Examples:
-
-```
-$ ./caesium.sh
-caesium v0.3.2 running on linux.
-Press Ctrl+C to exit.
->> 
-```
+Example:
 
 ```
 $ caesium
-caesium v0.3.2 running on win32.
+caesium v0.3.2 running on linux.
 Press Ctrl+C to exit.
 >> 
 ```
