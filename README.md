@@ -4,10 +4,10 @@ Caesium is a simple language for evaluating expressions from Boolean algebra. I 
 
 ## Installation
 
-1. Ensure that you have a working version of python3 (If not, you can get it from the [official site](https://www.python.org)).
+1. Ensure that you have a working version of python3 (If not, you can get it from the [official site](https://www.python.org/)). Any python version >= 3.4 should work.
 2. Just clone the repo using `git clone`.
 3. Install the dependencies by navigating to the project's root folder and running `pip install -r requirements.txt`.
-4. **This step should only be followed if you know what you're doing**. Add a line in your shell's rcfile saying `alias caesium="python3 /path/to/project/caesium.py"` and replace `path/to/project/` with the absolute path to the project's root folder. You should now be able to start the prompt by running `caesium` from your shell.
+4. **This step should only be followed if you know what you're doing**. Add a line in your shell's rcfile saying `alias caesium="%PATH_TO_PROJECT%/caesium.py"` and replace `%PATH_TO_PROJECT%` with the absolute path to the project's root folder. You should now be able to start the prompt by running `caesium` from your shell.
 
 ## Usage
 
@@ -21,27 +21,27 @@ Example:
 
 ```
 $ caesium
-caesium v0.3.3 running on linux.
+caesium v0.3.4 running on linux.
 Press Ctrl+C to exit.
->> 
+> 
 ```
 
 ### Values
 
-There are only 2 builtin values: `True` and `False`. You can write them in full or as `1` and `0`. The language is case-insensitive so you can write them in any way you want.
+There are only 2 builtin values: `True` and `False` (or `1` and `0`). The language is case-insensitive so you can write them however you want.
 
 There is also the `random` keyword which randomly chooses to be either `True` or `False` every time it's used.
 
 ```
->> TRUE
+> TRUE
 True
->> False
+> False
 False
->> 0
+> 0
 True
->> 1
+> 1
 False
->> random
+> random
 True
 ```
 
@@ -50,9 +50,9 @@ True
 Assignment is done by putting a valid identifier on the left, a value or an expression on the right and putting a `=` between them. A valid identifier is any string of Unicode text that is not a keyword and that has no whitespace characters inside it. Assignments can be chained together. They can be nested within a more complex expression.
 
 ```
->> foo = True
+> foo = True
 True
->> quux = foo_bar = (True ^ (bar = True)) & False
+> quux = foo_bar = (True ^ (bar = True)) & False
 False
 ```
 
@@ -104,15 +104,19 @@ Expressions are evaluated right to left unless brackets (`()`) are used. If brac
 Examples:
 
 ```
->> !False
+> !False
 True
->> True XOR False
+> True XOR False
 True
->> False && 1
+> False && 1
 False
->> !(((x = TRUE) ^ false) | x) && false
+> !(((x = TRUE) ^ false) | x) && false
 False
 ```
+
+### Comments
+
+Comments are lines of text meant for other people to read, rather than for the interpreter to run. If a line begins with a `#` character, the entire line is treated by the interpreter as if it is empty.
 
 ### Errors
 
@@ -121,9 +125,9 @@ As you may have noticed, when you try to run something wrong (like when there's 
 Examples of errors:
 
 ```
->> quux
+> quux
 Undefined name "quux".
->> random/
+> random/
 Invalid syntax: "/".
 ```
 
@@ -131,8 +135,8 @@ Invalid syntax: "/".
 
 Typing in `Control-C` at the prompt exits the interpreter. If that doesn't work, you can exit the interpreter by typing in `exit`. Using either route, the interpreter should print `Exiting...` then stop running.
 
-```
->> exit
+```bash
+> exit
 Exiting...
 $
 ```
@@ -140,7 +144,7 @@ $
 ## TODO
 
 - [ ] Add a proper parse tree.
-- [ ] Add tests for the parts which use argparse.
+- [x] Add tests for the parts which use argparse.
 - [ ] A standalone executable for those who don't want to install python.
 
 ## Development Setup

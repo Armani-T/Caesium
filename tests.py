@@ -11,7 +11,7 @@ def patch_runtime_vars(monkeypatch):
         "quux": False,
         "foobar": False,
     }
-    monkeypatch.setattr(caesium, "runtime_vars", new_vars)
+    monkeypatch.setattr(caesium, "RUNTIME_VARS", new_vars)
 
 
 @mark.parametrize(
@@ -53,7 +53,7 @@ def test_get_name(name: str, expected: bool):
 )
 def test_store_name(name: str, value: bool):
     caesium.store_name(name, value)
-    assert name in caesium.runtime_vars
+    assert name in caesium.RUNTIME_VARS
     assert caesium.get_name(name) is value
 
 
@@ -136,8 +136,7 @@ def test_parse_expr(line: str):
 )
 def test_parse_operation(expr: str, expected: bool):
     stream = tuple(caesium.tokenize(expr))
-    return_value: bool = caesium.parse_operation(stream)
-    assert return_value is expected
+    assert caesium.parse_operation(stream) is expected
 
 
 @mark.parametrize(
@@ -177,3 +176,30 @@ def test_do_assignment(expr: str, expected: bool) -> None:
 )
 def test_parse_name(name: str, expected: bool) -> None:
     assert caesium.parse_name(name) is expected
+
+
+@mark.parametrize(
+    "flags,attr_name",
+    (
+        (["--version"], "version"),
+        (["-v"], "version"),
+        (["-e", "true"], "expr"),
+        (["--expr", "true ^ false | 0 & 1"], "expr"),
+    )
+)
+def test_valid_cli_flags(flags, attr_name):
+    arg_parser = caesium.setup_cli()
+    args = arg_parser.parse_args(flags)
+    assert getattr(args, attr_name)
+
+
+@mark.parametrize("flag", (["-a"], ["--wrong"], ["--expr"]))
+def test_invalid_cli_flag(flag):
+    try:
+        arg_parser = setup_cli()
+        args = parser.parse_args(flag)
+        failed = False
+    except SystemExit as error:
+        failed = True
+    finally:
+        assert failed

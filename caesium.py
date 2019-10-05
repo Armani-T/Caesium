@@ -6,9 +6,9 @@ from random import choice
 from sys import platform, stdin, stdout
 from typing import Generator, Iterable, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "v0.3.3"
+PROGRAM_NAME, VERSION = "caesium", "0.3.4"
 KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit", "random")
-PROMPT = "\n>> "
+PROMPT = ">"
 REGEX_TOKENS = "|".join(
     (
         r"(?P<NOT>\bnot\b|\!)",
@@ -27,11 +27,11 @@ REGEX_TOKENS = "|".join(
 MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 
 Token = namedtuple("Token", ("type", "text"))
-runtime_vars = {}
+RUNTIME_VARS = {}
 
 is_keyword = lambda name: name.lower() in KEYWORDS
-get_name = lambda name: runtime_vars[name.lower()]
-store_name = lambda name, value: runtime_vars.update({name.lower(): value})
+get_name = lambda name: RUNTIME_VARS[name.lower()]
+store_name = lambda name, value: RUNTIME_VARS.update({name.lower(): value})
 
 
 def tokenize(text: str) -> Generator[Token, None, None]:
@@ -72,7 +72,7 @@ def parse_expr(expr: Iterable[Token]) -> bool:
     """
     tokens = tuple(expr)
     if not tokens:
-        raise RuntimeError
+        raise AttributeError
     if len(tokens) == 1:
         return parse_name(tokens[0].text)
     return parse_operation(tokens)
@@ -94,10 +94,8 @@ def parse_name(name: str) -> bool:
     """
 
     def stop():
-        import sys
-
         stdout.write("Exiting...\n")
-        sys.exit(0)
+        exit()
 
     name = name.lower()
     return {
@@ -203,7 +201,8 @@ def _run_prompt(line: str) -> str:
     """Get code from the prompt, run then return it."""
     try:
         tokens = tokenize(line)
-        return str(parse_expr(tokens)) or ""
+        result = str(parse_expr(tokens))
+        return result
 
     except (SyntaxError, NameError) as error:
         return error.args[0]
@@ -211,20 +210,20 @@ def _run_prompt(line: str) -> str:
         return 'Undefined name "%s".' % error.args[0]
     except ValueError:
         return "Unmatched bracket in expression."
-    except RuntimeError:
+    except AttributeError:
         return ""
 
 
 def run_prompt() -> None:
     """Start and manage the language's REPL."""
     stdout.write(
-        "%s %s running on %s.\nPress Ctrl+C to exit."
+        "%s v%s running on %s.\nPress Ctrl+C to exit."
         % (PROGRAM_NAME, VERSION, platform)
     )
     running = True
     while running:
         try:
-            stdout.write(PROMPT)
+            stdout.write("\n%s " % PROMPT)
             line = stdin.readline()
             if line:
                 expr_value = _run_prompt(line)
@@ -236,6 +235,7 @@ def run_prompt() -> None:
 
 
 def setup_cli() -> ArgumentParser:
+    """Set up and define the parser and command line flags for the app."""
     parser = ArgumentParser(prog=PROGRAM_NAME)
     group = parser.add_mutually_exclusive_group()
     group.add_argument(

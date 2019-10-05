@@ -3,9 +3,10 @@ venv/
 *.py[co]
 
 # Tool Cruft
+.coverage
 .idea/
 .mypy_cache/
 .pytest_cache/
 .pylintrc
-.coverage
+.python-version
 pytest.ini
