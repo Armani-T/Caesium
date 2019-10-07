@@ -6,9 +6,20 @@ from random import choice
 from sys import platform, stdin, stdout
 from typing import Generator, Iterable, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "0.3.4"
-KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit", "random")
-PROMPT = ">"
+PROGRAM_NAME, VERSION = "caesium", "0.3.5"
+KEYWORDS = (
+    "true",
+    "false",
+    "and",
+    "or",
+    "not",
+    "xor",
+    "exit",
+    "random",
+    "1",
+    "0",
+)
+PROMPT = "Cs>"
 REGEX_TOKENS = "|".join(
     (
         r"(?P<NOT>\bnot\b|\!)",
@@ -254,10 +265,11 @@ def setup_cli() -> ArgumentParser:
 
 
 def main() -> None:
+    """Parse the command line args and run the app accordingly."""
     parser = setup_cli()
     args = parser.parse_args()
     if args.version:
-        stdout.write("%s %s\n" % (PROGRAM_NAME, VERSION))
+        stdout.write("%s v%s\n" % (PROGRAM_NAME, VERSION))
     elif args.expr:
         stdout.write(str(parse_expr(tokenize(args.expr))))
     else:
