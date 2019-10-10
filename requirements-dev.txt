@@ -1,5 +1,6 @@
 black==19.3
 mypy==0.720
-pylint==2.3
-pytest==5.0
-typing==3.7
+pylint==2.4.2
+pytest==5.2.0
+pytest-cov==2.8.0
+typing==3.7.4.1
