@@ -21,9 +21,9 @@ Example:
 
 ```
 $ caesium
-caesium v0.3.5 running on linux.
+caesium v0.3.6 running on linux.
 Press Ctrl+C to exit.
-> 
+Cs> 
 ```
 
 ### Values
@@ -33,26 +33,26 @@ There are only 2 builtin values: `True` and `False` (or `1` and `0`). The langua
 There is also the `random` keyword which randomly chooses to be either `True` or `False` every time it's used.
 
 ```
-> TRUE
+Cs> TRUE
 True
-> False
+Cs> False
 False
-> 0
+Cs> 0
 True
-> 1
+Cs> 1
 False
-> random
+Cs> random
 True
 ```
 
 ### Assignment
 
-Assignment is done by putting a valid identifier on the left, a value or an expression on the right and putting a `=` between them. A valid identifier is any string of Unicode text that is not a keyword and that has no whitespace characters inside it. Assignments can be chained together. They can be nested within a more complex expression.
+You can assign a name to a value by putting a valid identifier on the left,then a `=` and finally an expression. A valid identifier is any string of Unicode text that is not a keyword and that has no whitespace characters within. Assignments can be chained together or nested within an expression.
 
 ```
-> foo = True
+Cs> foo = True
 True
-> quux = foo_bar = (True ^ (bar = True)) & False
+Cs> quux = coco = (True ^ (bar = True)) & False
 False
 ```
 
@@ -65,52 +65,52 @@ There are 4 main operators. These are:
 3. `OR`
 4. `XOR`
 
-`NOT` takes only one argument and negates it. `NOT` can also be written as `!`. This can be represented in a table as:
+`NOT` takes only one argument and flips its value. `NOT` can also be written as `!`. This can be represented in a table as:
 
-Value | Result
-:---:|:---:|
-`True` | `False`
-`False` | `True`
+Expression | Result |
+|:---:|:---:|
+`!True` | `False` |
+`!False` | `True` |
 
 `AND` takes 2 arguments and checks if both of them evaluate to `True`. If they both do, it returns `True`, otherwise it returns `False`. `AND` can also be written as `&` or `&&`. This can be represented in a table as:
 
-Value 1 | Value 2 | Result
-:---:|:---:|:---:|
-`True` | `True` | `True`
-`True` | `False` | `False`
-`False` | `True` | `False`
-`False` | `False` | `False`
+Expression | Result |
+|:---:|:---:|
+`True AND True` | `True` |
+`True AND False` | `False` |
+`False AND True` | `False` |
+`False AND False` | `False` |
 
 `OR` also takes 2 arguments and checks if both of them evaluate to `False`. If they both do, it returns `False`, otherwise it returns `True`. `OR` can also be written as `|` or `||`. This can be represented in a table as:
 
-Value 1 | Value 2 | Result
-:---:|:---:|:---:|
-`True` | `True` | `True`
-`True` | `False` | `True`
-`False` | `True` | `True`
-`False` | `False` | `False`
+Expression | Result |
+|:---:|:---:|
+`True || True` | `True` |
+`True || False` | `True` |
+`False || True` | `True` |
+`False || False` | `False` |
 
 `XOR` takes 2 arguments and checks if they evaluate to different values. If they do, it returns `True`, otherwise it returns `False`. `XOR` can also be written as `^`. This can be represented in a table as:
 
-Value 1 | Value 2 | Result
-:---:|:---:|:---:|
-`True` | `True` | `False`
-`True` | `False` | `True`
-`False` | `True` | `True`
-`False` | `False` | `False`
+Expression | Result |
+|:---:|:---:|
+`True ^ True` | `False` |
+`True ^ False` | `True` |
+`False ^ True` | `True` |
+`False ^ False` | `False` |
 
 Expressions are evaluated right to left unless brackets (`()`) are used. If brackets are used, the innermost pair is evaluated going to the outermost. This also means that you can put an assignment in brackets then use its value in the same expression outside those brackets.
 
 Examples:
 
 ```
-> !False
+Cs> !False
 True
-> True XOR False
+Cs> True XOR False
 True
-> False && 1
+Cs> False && 1
 False
-> !(((x = TRUE) ^ false) | x) && false
+Cs> !(((x = TRUE) ^ false) | x) && false
 False
 ```
 
@@ -125,9 +125,9 @@ As you may have noticed, when you try to run something wrong (like when there's 
 Examples of errors:
 
 ```
-> quux
+Cs> quux
 Undefined name "quux".
-> random/
+Cs> random/
 Invalid syntax: "/".
 ```
 
@@ -135,8 +135,8 @@ Invalid syntax: "/".
 
 Typing in `Control-C` at the prompt exits the interpreter. If that doesn't work, you can exit the interpreter by typing in `exit`. Using either route, the interpreter should print `Exiting...` then stop running.
 
-```bash
-> exit
+```
+Cs> exit
 Exiting...
 $
 ```
@@ -144,7 +144,6 @@ $
 ## TODO
 
 - [ ] Add a proper parse tree.
-- [x] Add tests for the parts which use argparse.
 - [ ] A standalone executable for those who don't want to install python.
 
 ## Development Setup
@@ -155,11 +154,12 @@ $
 
 ## Contributing
 
-1. Fork the `develop` branch.
-2. Create a branch for your feature.
-3. Commit your changes.
-4. Push to `origin`.
-5. Create a pull request.
+1. Crete your feature branch by forking  the `develop` branch.
+2. Run `black` on all the code in the repo.
+3. Add at least 1 test for your feature.
+4. Commit your changes.
+5. Push to `origin`.
+6. Open a pull request.
 
 ## Meta
 

@@ -3,10 +3,10 @@ from argparse import ArgumentParser
 from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
-from sys import platform, stdin, stdout
+from sys import platform, stdin, stdout, exit as sys_exit
 from typing import Generator, Iterable, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "0.3.5"
+PROGRAM_NAME, VERSION = "caesium", "0.3.6"
 KEYWORDS = (
     "true",
     "false",
@@ -37,7 +37,7 @@ REGEX_TOKENS = "|".join(
 )
 MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 
-Token = namedtuple("Token", ("type", "text"))
+Token = namedtuple("Token", ("type", "value"))
 RUNTIME_VARS = {}
 
 is_keyword = lambda name: name.lower() in KEYWORDS
@@ -85,7 +85,7 @@ def parse_expr(expr: Iterable[Token]) -> bool:
     if not tokens:
         raise AttributeError
     if len(tokens) == 1:
-        return parse_name(tokens[0].text)
+        return parse_name(tokens[0].value)
     return parse_operation(tokens)
 
 
@@ -106,7 +106,7 @@ def parse_name(name: str) -> bool:
 
     def stop():
         stdout.write("Exiting...\n")
-        exit()
+        sys_exit(0)
 
     name = name.lower()
     return {
@@ -150,7 +150,7 @@ def parse_operation(expr: Sequence[Token]) -> bool:
     if expr[1].type == "XOR":
         return do_xor(expr)
 
-    line = " ".join((token.text for token in expr))
+    line = " ".join((token.value for token in expr))
     raise SyntaxError('Invalid syntax: "%s".' % line)
 
 
@@ -168,7 +168,7 @@ def do_assignment(expr: Sequence[Token]) -> bool:
     bool
         The expression's evaluated value.
     """
-    var_name = expr[0].text
+    var_name = expr[0].value
     var_value = parse_expr(expr[2:])
 
     if is_keyword(var_name):
@@ -193,17 +193,17 @@ def do_parens(expr: Sequence[Token]) -> bool:
 
 def do_and(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an AND expression."""
-    return parse_name(expr[0].text) and parse_expr(expr[2:])
+    return parse_name(expr[0].value) and parse_expr(expr[2:])
 
 
 def do_or(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an OR expression."""
-    return parse_name(expr[0].text) or parse_expr(expr[2:])
+    return parse_name(expr[0].value) or parse_expr(expr[2:])
 
 
 def do_xor(expr: Sequence[Token]) -> bool:
     """Evaluate the value of an XOR expression."""
-    left = parse_name(expr[0].text)
+    left = parse_name(expr[0].value)
     right = parse_expr(expr[2:])
     return (left or right) and (not (left and right))
 
@@ -274,7 +274,8 @@ def main() -> None:
         stdout.write(str(parse_expr(tokenize(args.expr))))
     else:
         run_prompt()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys_exit(main())
