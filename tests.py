@@ -1,9 +1,10 @@
+from typing import List, Tuple
+
 import pytest
 
 import caesium
 
 parametrize = pytest.mark.parametrize
-xfail = pytest.mark.xfail
 
 
 @pytest.fixture(autouse=True)
@@ -72,7 +73,7 @@ def test_store_name(name: str, value: bool):
         ("false", (caesium.Token("NAME", "false"),)),
     ),
 )
-def test_tokenize(source: str, tokens: tuple):
+def test_tokenize(source: str, tokens: Tuple[caesium.Token]):
     stream = tuple(caesium.tokenize(source))
     assert stream == tokens
 
@@ -82,7 +83,7 @@ def test_tokenize(source: str, tokens: tuple):
     (
         "E_VAR = e_var = TRUE",
         "true",
-        pytest.param("(True) | (False)", marks=xfail),
+        pytest.param("(True) | (False)", marks=pytest.mark.xfail),
     ),
 )
 def test_parse_expr(line: str):
@@ -146,29 +147,28 @@ def test_parse_name(name: str, expected: bool) -> None:
         (["--expr", "true ^ false | 0 & 1"], "expr"),
     ),
 )
-def test_valid_cli_flags(flags, attr_name):
+def test_valid_cli_flags(flags: List[str], attr_name: str):
     arg_parser = caesium.setup_cli()
     args = arg_parser.parse_args(flags)
     assert getattr(args, attr_name)
 
 
-@parametrize("flag", (["-a"], ["--wrong"], ["--expr"]))
-def test_invalid_cli_flag(flag):
+@parametrize("flags", (["-a"], ["--wrong"], ["--expr"]))
+def test_invalid_cli_flag(flags: List[str]):
     with pytest.raises(SystemExit):
-        arg_parser = caesium.setup_cli()
-        args = arg_parser.parse_args(flag)
+        parser = caesium.setup_cli()
+        parser.parse_args(flags)
 
 
 @parametrize("expr", ("TRUE=0", "1 = 0", "false=random"))
-def test_invalid_assignments(expr):
-    tokens = tuple(caesium.tokenize(expr))
+def test_invalid_assignments(expr: str):
     with pytest.raises(NameError) as excinfo:
-        caesium.do_assignment(tokens)
+        caesium.do_assignment(tuple(caesium.tokenize(expr)))
     assert "reserved" in str(excinfo.value)
 
 
-@parametrize("text", ("1 `OR` 0", "1 - 0", "~/1/"))
-def test_tokenize_raises_syntaxerror_on_invalid_char(text):
+@parametrize("text", ("1 `OR` 0", "1 - 0", "~1/", "+1"))
+def test_tokenize_raises_syntaxerror_on_invalid_char(text: str):
     with pytest.raises(SyntaxError):
         tuple(caesium.tokenize(text))
 
