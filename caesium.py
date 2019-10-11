@@ -6,7 +6,7 @@ from random import choice
 from sys import platform, stdin, stdout, exit as sys_exit
 from typing import Generator, Iterable, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "0.3.6"
+PROGRAM_NAME, VERSION = "caesium", "0.4.0"
 KEYWORDS = (
     "true",
     "false",
@@ -14,6 +14,8 @@ KEYWORDS = (
     "or",
     "not",
     "xor",
+    "nand",
+    "nor",
     "exit",
     "random",
     "1",
@@ -22,10 +24,12 @@ KEYWORDS = (
 PROMPT = "Cs>"
 REGEX_TOKENS = "|".join(
     (
-        r"(?P<NOT>\bnot\b|\!)",
+        r"(?P<NOT>\bnot\b|!)",
         r"(?P<OR>\bor\b|\|\||\|)",
-        r"(?P<AND>\band\b|\&\&|\&)",
+        r"(?P<AND>\band\b|&&|&)",
         r"(?P<XOR>\bxor\b|\^)",
+        r"(?P<NAND>\bnand\b|@)",
+        r"(?P<NOR>\bnor\b|~)",
         r"(?P<NAME>\b\w+\b)",
         r"(?P<EQUALS>\=)",
         r"(?P<LPAREN>\()",
@@ -138,20 +142,18 @@ def parse_operation(expr: Sequence[Token]) -> bool:
     if expr[0].type == "NOT":
         return not parse_expr(expr[1:])
 
-    if expr[1].type == "EQUALS":
-        return do_assignment(expr)
+    def throw_error(expr):
+        line = " ".join((token.value for token in expr))
+        raise SyntaxError('Invalid syntax: "%s".' % line)
 
-    if expr[1].type == "AND":
-        return do_and(expr)
-
-    if expr[1].type == "OR":
-        return do_or(expr)
-
-    if expr[1].type == "XOR":
-        return do_xor(expr)
-
-    line = " ".join((token.value for token in expr))
-    raise SyntaxError('Invalid syntax: "%s".' % line)
+    return {
+        "EQUALS": do_assignment,
+        "AND": do_and,
+        "OR": do_or,
+        "XOR": do_xor,
+        "NAND": lambda expr: not do_and(expr),
+        "NOR": lambda expr: not do_or(expr),
+    }.get(expr[1].type, throw_error)(expr)
 
 
 def do_assignment(expr: Sequence[Token]) -> bool:
@@ -208,13 +210,23 @@ def do_xor(expr: Sequence[Token]) -> bool:
     return (left or right) and (not (left and right))
 
 
-def _run_prompt(line: str) -> str:
-    """Get code from the prompt, run then return it."""
-    try:
-        tokens = tokenize(line)
-        result = str(parse_expr(tokens))
-        return result
+def _run_code(line: str) -> str:
+    """
+    Get code from the prompt, run and return its string value.
 
+    Parameters
+    ----------
+    line
+        The line of code to be run.
+
+    Returns
+    -------
+    str
+        Either the string value of the evaluated code or an error
+        message.
+    """
+    try:
+        return str(parse_expr(tokenize(line)))
     except (SyntaxError, NameError) as error:
         return error.args[0]
     except KeyError as error:
@@ -231,18 +243,14 @@ def run_prompt() -> None:
         "%s v%s running on %s.\nPress Ctrl+C to exit."
         % (PROGRAM_NAME, VERSION, platform)
     )
-    running = True
-    while running:
+    while True:
         try:
             stdout.write("\n%s " % PROMPT)
-            line = stdin.readline()
-            if line:
-                expr_value = _run_prompt(line)
-                stdout.write(expr_value)
+            stdout.write(_run_code(stdin.readline()))
 
         except KeyboardInterrupt:
             stdout.write("\nExiting...\n")
-            running = False
+            return
 
 
 def setup_cli() -> ArgumentParser:
@@ -271,7 +279,7 @@ def main() -> None:
     if args.version:
         stdout.write("%s v%s\n" % (PROGRAM_NAME, VERSION))
     elif args.expr:
-        stdout.write(str(parse_expr(tokenize(args.expr))))
+        stdout.write(_run_code(args.expr))
     else:
         run_prompt()
     return 0

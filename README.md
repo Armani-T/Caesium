@@ -1,36 +1,42 @@
 # Caesium README
 
-Caesium is a simple language for evaluating expressions from Boolean algebra. I tried to make it as compatible as possible with other programming languages. I built it to run my Boolean expressions when prototyping complex if statements.
+Caesium is a simple language built to evaluate Boolean algebra.
 
 ## Installation
 
-1. Ensure that you have a working version of python3 (If not, you can get it from the [official site](https://www.python.org/)). Any python version >= 3.4 should work.
-2. Just clone the repo using `git clone`.
-3. Install the dependencies by navigating to the project's root folder and running `pip install -r requirements.txt`.
-4. **This step should only be followed if you know what you're doing**. Add a line in your shell's rcfile saying `alias caesium="%PATH_TO_PROJECT%/caesium.py"` and replace `%PATH_TO_PROJECT%` with the absolute path to the project's root folder. You should now be able to start the prompt by running `caesium` from your shell.
+1. Ensure that you have a working version of python3 (If you don't, you can get it from the [official site](https://www.python.org/)). Any python version ≥ 3.4.3 should work.
+2. Clone the repo using `git clone` or download it as a zip file and unzip it anywhere in your file system.
+3. Navigate to the project's root folder and run `pip install -r requirements.txt` to install the dependencies.
+4. Add the `./caesium.py` file to your `PATH` (**This step is optional**).
 
 ## Usage
 
 ### Starting the Prompt
 
-You can start the prompt by running `caesium`. Please note that this route only works if you followed Step 3 of the Installation guide.
+You can start the prompt by running `caesium`. Please note that this route can only work if you follow Step 4 of the [Installation guide](#Installation).
 
-You may also start it by running `python3 ./caesium.py` from the root directory of the project.
+You can also start the prompt by navigating to the root directory of this project and running `python3 caesium.py`.
 
 Example:
 
 ```
 $ caesium
-caesium v0.3.6 running on linux.
-Press Ctrl+C to exit.
+caesium v0.4.0 running on win32.
+Press Ctrl+C or type "exit" to quit.
 Cs> 
 ```
 
-### Values
+If you want to close the interpreter now, skip down [here](#Exiting) to learn how to.
 
-There are only 2 builtin values: `True` and `False` (or `1` and `0`). The language is case-insensitive so you can write them however you want.
+### Expressions
 
-There is also the `random` keyword which randomly chooses to be either `True` or `False` every time it's used.
+An expression is any valid piece of code which returns a value. Expressions are evaluated right to left unless brackets (`()`) are used. If brackets are used, they are evaluated from the innermost to the outermost pair.
+
+#### Values
+
+There are only 2 built-in values: `True` and `False` (or `1` and `0` respectively). Caesium is case-insensitive they will work both in upper and lower case.
+
+There is also the `random` keyword which randomly evaluates to either `True` or `False` every time it's used.
 
 ```
 Cs> TRUE
@@ -45,7 +51,7 @@ Cs> random
 True
 ```
 
-### Assignment
+#### Assignment
 
 You can assign a name to a value by putting a valid identifier on the left,then a `=` and finally an expression. A valid identifier is any string of Unicode text that is not a keyword and that has no whitespace characters within. Assignments can be chained together or nested within an expression.
 
@@ -56,23 +62,26 @@ Cs> quux = coco = (True ^ (bar = True)) & False
 False
 ```
 
-### Operations
+#### Operators
 
-There are 4 main operators. These are:
+In caesium (and Boolean algebra in general),there are 2 types of operators: *basic* and *derived* operators.
 
-1. `NOT`
-2. `AND`
-3. `OR`
-4. `XOR`
+#### Basic Operators
 
-`NOT` takes only one argument and flips its value. `NOT` can also be written as `!`. This can be represented in a table as:
+Basic operators, together with the 2 Boolean values, are the building blocks of Boolean algebra. There are only 3 of these basic operators. They are:
+
+##### 1. `NOT`
+
+`NOT` takes  one value and flips its value. `NOT` can also be written as `!`. `NOT` operations can be tabulated as:
 
 Expression | Result |
 |:---:|:---:|
 `!True` | `False` |
 `!False` | `True` |
 
-`AND` takes 2 arguments and checks if both of them evaluate to `True`. If they both do, it returns `True`, otherwise it returns `False`. `AND` can also be written as `&` or `&&`. This can be represented in a table as:
+##### 2. `AND`
+
+`AND` takes 2 arguments and checks if both of them evaluate to `True`. If they both do, it returns `True`, otherwise it returns `False`. `AND` can also be written as `&` or `&&`. `AND`  operations can be tabulated as:
 
 Expression | Result |
 |:---:|:---:|
@@ -81,7 +90,10 @@ Expression | Result |
 `False AND True` | `False` |
 `False AND False` | `False` |
 
-`OR` also takes 2 arguments and checks if both of them evaluate to `False`. If they both do, it returns `False`, otherwise it returns `True`. `OR` can also be written as `|` or `||`. This can be represented in a table as:
+
+##### 3. `OR`
+
+`OR` also takes 2 arguments and checks if both of them evaluate to `False`. If they both do, it returns `False`, otherwise it returns `True`. `OR` can also be written as `|` or `||`. `OR` operations can be tabulated as:
 
 Expression | Result |
 |:---:|:---:|
@@ -90,29 +102,42 @@ Expression | Result |
 `False || True` | `True` |
 `False || False` | `False` |
 
-`XOR` takes 2 arguments and checks if they evaluate to different values. If they do, it returns `True`, otherwise it returns `False`. `XOR` can also be written as `^`. This can be represented in a table as:
+#### Derived Operators
+
+Derived operators, as their name implies, are derived from basic operators. All of them can be rewritten using only the basic operators.
+
+##### 1. `XOR`
+
+`XOR`, or **eXclusive OR**, works just like `OR`, but both values cannot be `True`. `XOR` can also be written as `^`. `XOR` operations can be represented in a table as:
 
 Expression | Result |
-|:---:|:---:|
+|:--------:|:------:|
 `True ^ True` | `False` |
 `True ^ False` | `True` |
 `False ^ True` | `True` |
 `False ^ False` | `False` |
 
-Expressions are evaluated right to left unless brackets (`()`) are used. If brackets are used, the innermost pair is evaluated going to the outermost. This also means that you can put an assignment in brackets then use its value in the same expression outside those brackets.
+##### 2. `NOR`
 
-Examples:
+`NOR` also works like `OR`, but it returns the opposite of what `OR` would. You can mimic it by doing `!(<val_1> || <val_2>)`. It can also be written as `~`. `NOR` operations can be represented in a table as:
 
-```
-Cs> !False
-True
-Cs> True XOR False
-True
-Cs> False && 1
-False
-Cs> !(((x = TRUE) ^ false) | x) && false
-False
-```
+Expression | Result |
+|:---:|:---:|
+`True NOR True` | `False` |
+`True NOR False` | `False` |
+`False NOR True` | `False` |
+`False NOR False` | `True` |
+
+##### 3. `NAND`
+
+`NAND` works exactly like `AND`, but it returns the opposite of what `AND` would. You can mimic it by doing `NOT (<val_1> AND <val_2>)`. It can also be written as `@`. NAND operations can be represented in a table as:
+
+Expression | Result |
+|:---:|:---:|
+`True @ True` | `False` |
+`True @ False` | `True` |
+`False @ True` | `True` |
+`False @ False` | `True` |
 
 ### Comments
 
@@ -120,20 +145,20 @@ Comments are lines of text meant for other people to read, rather than for the i
 
 ### Errors
 
-As you may have noticed, when you try to run something wrong (like when there's a missing closing bracket), the interpreter throws an error. An error is basically the interpreter alerting you that there was something wrong with the expression so it couldn't run it successfully. Once an error is thrown, you will have to fix what your expression and rerun it.
+When you try to run code which has a mistake (like a missing bracket), the interpreter complains about your code instead of running it. This is an error. An error is basically the interpreter alerting you that there was something wrong with the code and so it can't run it. Once an error is thrown, you will have to fix whatever is wrong with your expression and rerun it.
 
-Examples of errors:
+Examples:
 
 ```
 Cs> quux
 Undefined name "quux".
-Cs> random/
+Cs> random/  # Meant to say "random"
 Invalid syntax: "/".
 ```
 
-### Closing the Prompt
+### Exiting
 
-Typing in `Control-C` at the prompt exits the interpreter. If that doesn't work, you can exit the interpreter by typing in `exit`. Using either route, the interpreter should print `Exiting...` then stop running.
+Either pressing `Control + C` or typing in `exit` and hitting Enter will cause the interpreter to stop and take you back to the normal shell. Using either route, the interpreter should print `Exiting...` then stop running.
 
 ```
 Cs> exit
@@ -154,7 +179,7 @@ $
 
 ## Contributing
 
-1. Crete your feature branch by forking  the `develop` branch.
+1. Crete your feature branch by forking the `develop` branch.
 2. Run `black` on all the code in the repo.
 3. Add at least 1 test for your feature.
 4. Commit your changes.
@@ -165,6 +190,6 @@ $
 
 - Name: **Armani Tallam**
 - E-Mail: <armanitallam@gmail.com>
-- Github: <https://www.github.com/Armani-T>
+- GitHub: <https://www.github.com/Armani-T>
 
-This project is available under the **BSD License**. See the [LICENSE.txt](./LICENSE.txt) file for more information.
+This project is licensed under the **BSD License**. See the [license text](./LICENSE.txt) for more information.
