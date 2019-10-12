@@ -4,21 +4,23 @@ import pytest
 
 import caesium
 
-parametrize = pytest.mark.parametrize
+
+@pytest.mark.parametrize(
+    "name,value",
+    (
+        ("foobar", False),
+        ("quux", False),
+        ("a_var", True),
+        ("another_var", True),
+    ),
+)
+def test_store_name(name: str, value: bool):
+    caesium.store_name(name, value)
+    assert name in caesium.RUNTIME_VARS
+    assert caesium.get_name(name) is value
 
 
-@pytest.fixture(autouse=True)
-def patch_runtime_vars(monkeypatch):
-    new_vars = {
-        "a_var": True,
-        "another_var": True,
-        "quux": False,
-        "foobar": False,
-    }
-    monkeypatch.setattr(caesium, "RUNTIME_VARS", new_vars)
-
-
-@parametrize(
+@pytest.mark.parametrize(
     "name,expected",
     (("1", True), ("NOT", True), ("quux", False), ("foobar", False)),
 )
@@ -26,19 +28,12 @@ def test_is_keyword(name: str, expected: bool):
     assert caesium.is_keyword(name) is expected
 
 
-@parametrize("name,expected", (("a_var", True), ("quux", False)))
+@pytest.mark.parametrize("name,expected", (("a_var", True), ("quux", False)))
 def test_get_name(name: str, expected: bool):
     assert caesium.get_name(name) is expected
 
 
-@parametrize("name,value", (("abracadabra", True), ("epsilon", False)))
-def test_store_name(name: str, value: bool):
-    caesium.store_name(name, value)
-    assert name in caesium.RUNTIME_VARS
-    assert caesium.get_name(name) is value
-
-
-@parametrize(
+@pytest.mark.parametrize(
     "source,tokens",
     (
         (
@@ -78,7 +73,13 @@ def test_tokenize(source: str, tokens: Tuple[caesium.Token]):
     assert stream == tokens
 
 
-@parametrize(
+@pytest.mark.parametrize("text", ("1 `OR` 0", "1 - 0", "~1/", "+1"))
+def test_tokenize_raises_syntaxerror_on_invalid_char(text: str):
+    with pytest.raises(SyntaxError):
+        tuple(caesium.tokenize(text))
+
+
+@pytest.mark.parametrize(
     "line",
     (
         "E_VAR = e_var = TRUE",
@@ -87,11 +88,10 @@ def test_tokenize(source: str, tokens: Tuple[caesium.Token]):
     ),
 )
 def test_parse_expr(line: str):
-    tokens = tuple(caesium.tokenize(line))
-    assert caesium.parse_expr(tokens)
+    assert caesium.parse_expr(tuple(caesium.tokenize(line)))
 
 
-@parametrize(
+@pytest.mark.parametrize(
     "expr,expected",
     (
         ("_a = !false", True),
@@ -106,7 +106,7 @@ def test_parse_operation(expr: str, expected: bool):
     assert caesium.parse_operation(stream) is expected
 
 
-@parametrize(
+@pytest.mark.parametrize(
     "expr,expected",
     (
         ("a_var=True", True),
@@ -123,7 +123,7 @@ def test_do_assignment(expr: str, expected: bool) -> None:
     assert caesium.get_name(tokens[0].value) is expected is result
 
 
-@parametrize(
+@pytest.mark.parametrize(
     "name,expected",
     (
         ("true", True),
@@ -138,7 +138,7 @@ def test_parse_name(name: str, expected: bool) -> None:
     assert caesium.parse_name(name) is expected
 
 
-@parametrize(
+@pytest.mark.parametrize(
     "flags,attr_name",
     (
         (["--version"], "version"),
@@ -153,24 +153,18 @@ def test_valid_cli_flags(flags: List[str], attr_name: str):
     assert getattr(args, attr_name)
 
 
-@parametrize("flags", (["-a"], ["--wrong"], ["--expr"]))
+@pytest.mark.parametrize("flags", (["-a"], ["--wrong"], ["--expr"]))
 def test_invalid_cli_flag(flags: List[str]):
     with pytest.raises(SystemExit):
         parser = caesium.setup_cli()
         parser.parse_args(flags)
 
 
-@parametrize("expr", ("TRUE=0", "1 = 0", "false=random"))
+@pytest.mark.parametrize("expr", ("TRUE=0", "1 = 0", "false=random"))
 def test_invalid_assignments(expr: str):
     with pytest.raises(NameError) as excinfo:
         caesium.do_assignment(tuple(caesium.tokenize(expr)))
     assert "reserved" in str(excinfo.value)
-
-
-@parametrize("text", ("1 `OR` 0", "1 - 0", "~1/", "+1"))
-def test_tokenize_raises_syntaxerror_on_invalid_char(text: str):
-    with pytest.raises(SyntaxError):
-        tuple(caesium.tokenize(text))
 
 
 if __name__ == "__main__":
