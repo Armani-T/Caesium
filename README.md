@@ -21,7 +21,7 @@ Example:
 
 ```
 $ caesium
-caesium v0.4.0 running on win32.
+caesium v0.4.1 running on win32.
 Press Ctrl+C or type "exit" to quit.
 Cs> 
 ```
@@ -183,7 +183,7 @@ $
 2. Run `black` on all the code in the repo.
 3. Add at least 1 test for your feature.
 4. Commit your changes.
-5. Push to `origin`.
+5. Push to `origin/develop`.
 6. Open a pull request.
 
 ## Meta

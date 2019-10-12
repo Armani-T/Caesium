@@ -3,10 +3,10 @@ from argparse import ArgumentParser
 from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
-from sys import platform, stdin, stdout, exit as sys_exit
+from sys import platform, exit as sys_exit
 from typing import Generator, Iterable, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "0.4.0"
+PROGRAM_NAME, VERSION = "caesium", "0.4.1"
 KEYWORDS = (
     "true",
     "false",
@@ -42,7 +42,7 @@ REGEX_TOKENS = "|".join(
 MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 
 Token = namedtuple("Token", ("type", "value"))
-RUNTIME_VARS = {}
+RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
 
 is_keyword = lambda name: name.lower() in KEYWORDS
 get_name = lambda name: RUNTIME_VARS[name.lower()]
@@ -87,7 +87,7 @@ def parse_expr(expr: Iterable[Token]) -> bool:
     """
     tokens = tuple(expr)
     if not tokens:
-        raise AttributeError
+        raise AttributeError("")
     if len(tokens) == 1:
         return parse_name(tokens[0].value)
     return parse_operation(tokens)
@@ -107,18 +107,8 @@ def parse_name(name: str) -> bool:
     bool
         The name's evaluated value.
     """
-
-    def stop():
-        stdout.write("Exiting...\n")
-        sys_exit(0)
-
-    name = name.lower()
     return {
-        "true": lambda _: True,
-        "1": lambda _: True,
-        "false": lambda _: False,
-        "0": lambda _: False,
-        "exit": lambda _: stop(),
+        "exit": lambda _: sys_exit(0),
         "random": lambda _: choice((True, False)),
     }.get(name, get_name)(name)
 
@@ -227,30 +217,25 @@ def _run_code(line: str) -> str:
     """
     try:
         return str(parse_expr(tokenize(line)))
-    except (SyntaxError, NameError) as error:
+    except (SyntaxError, NameError, AttributeError) as error:
         return error.args[0]
     except KeyError as error:
         return 'Undefined name "%s".' % error.args[0]
     except ValueError:
         return "Unmatched bracket in expression."
-    except AttributeError:
-        return ""
 
 
 def run_prompt() -> None:
     """Start and manage the language's REPL."""
-    stdout.write(
+    print(
         "%s v%s running on %s.\nPress Ctrl+C to exit."
         % (PROGRAM_NAME, VERSION, platform)
     )
     while True:
         try:
-            stdout.write("\n%s " % PROMPT)
-            stdout.write(_run_code(stdin.readline()))
-
-        except KeyboardInterrupt:
-            stdout.write("\nExiting...\n")
-            return
+            print(_run_code(input("%s " % PROMPT)))
+        except KeyboardInterrupt as error:
+            raise SystemExit from error
 
 
 def setup_cli() -> ArgumentParser:
@@ -277,9 +262,9 @@ def main() -> None:
     parser = setup_cli()
     args = parser.parse_args()
     if args.version:
-        stdout.write("%s v%s\n" % (PROGRAM_NAME, VERSION))
+        print("%s v%s" % (PROGRAM_NAME, VERSION))
     elif args.expr:
-        stdout.write(_run_code(args.expr))
+        print(_run_code(args.expr))
     else:
         run_prompt()
     return 0
