@@ -158,11 +158,10 @@ Invalid syntax: "/".
 
 ### Exiting
 
-Either pressing `Control + C` or typing in `exit` and hitting Enter will cause the interpreter to stop and take you back to the normal shell. Using either route, the interpreter should print `Exiting...` then stop running.
+Either pressing `Control + C` or typing in `exit` and hitting Enter will cause the interpreter to stop and take you back to the normal shell. Using either route, the interpreter should stop running almost instantly.
 
 ```
 Cs> exit
-Exiting...
 $
 ```
 

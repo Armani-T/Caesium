@@ -167,5 +167,43 @@ def test_invalid_assignments(expr: str):
     assert "reserved" in str(excinfo.value)
 
 
+@pytest.mark.parametrize(
+    "code,expected",
+    (
+        ("quux & 1", False),
+        ("true && a_var", True),
+        ("true AND (NOT true OR false)", False),
+    )
+)
+def test_do_and(code: str, expected: bool):
+    expr = tuple(caesium.tokenize(code))
+    assert caesium.do_and(expr) is expected
+
+
+@pytest.mark.parametrize(
+    "code,expected",
+    (
+        ("quux | 1", True),
+        ("false || a_var", True),
+        ("true OR (NOT true AND false)", True),
+    )
+)
+def test_do_or(code: str, expected: bool):
+    expr = tuple(caesium.tokenize(code))
+    assert caesium.do_or(expr) is expected
+
+
+@pytest.mark.parametrize(
+    "code,expected",
+    (
+        ("quux ^ 1", True),
+        ("true XOR (NOT true NOR false)", False),
+    )
+)
+def test_do_xor(code: str, expected: bool):
+    expr = tuple(caesium.tokenize(code))
+    assert caesium.do_xor(expr) is expected
+
+
 if __name__ == "__main__":
     pytest.main(["-ra"])
