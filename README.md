@@ -168,7 +168,7 @@ $
 ## TODO
 
 - [ ] Add a proper parse tree.
-- [ ] A standalone executable for those who don't want to install python.
+- [ ] Put Caesium in PyPI.
 
 ## Development Setup
 
