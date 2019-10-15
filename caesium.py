@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
-from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
 from sys import platform, exit as sys_exit
-from typing import Generator, Iterable, Sequence
+from typing import Generator, List, Iterable, NamedTuple, Optional, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "0.4.1"
+PROGRAM_NAME, VERSION = "caesium", "0.4.2dev0"
 KEYWORDS = (
     "true",
     "false",
@@ -31,7 +30,7 @@ REGEX_TOKENS = "|".join(
         r"(?P<NAND>\bnand\b|@)",
         r"(?P<NOR>\bnor\b|~)",
         r"(?P<NAME>\b\w+\b)",
-        r"(?P<EQUALS>\=)",
+        r"(?P<EQUALS>=)",
         r"(?P<LPAREN>\()",
         r"(?P<RPAREN>\))",
         r"(?P<WHITESPACE>\s+)",
@@ -41,7 +40,8 @@ REGEX_TOKENS = "|".join(
 )
 MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 
-Token = namedtuple("Token", ("type", "value"))
+Token = NamedTuple("Token", (("type", str), ("value", str)))
+Node = NamedTuple("Node", (("token", Token), ("children", List["Node"])))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
 
 is_keyword = lambda name: name.lower() in KEYWORDS
@@ -69,6 +69,28 @@ def tokenize(text: str) -> Generator[Token, None, None]:
             raise SyntaxError('Invalid syntax: "%s".' % match.group())
         if match.lastgroup not in ("COMMENT", "WHITESPACE"):
             yield Token(match.lastgroup, match.group())
+
+
+def build_ast(tokens: Iterable[Token]):
+    OPERATORS = ("AND", "OR", "NOT", "XOR", "NAND", "NOR")
+    ROOT = Node(None, [])
+    parent_node = prev_parent = ROOT
+
+    for token in tokens:
+        current_node = Node(token, [])
+        if token.type in OPERATORS:
+            parent_node.children.append(current_node)
+            current_node.children.append(parent_node.children.pop(-2))
+            prev_parent, parent_node = parent_node, current_node
+        elif token.type == "LPAREN":
+            parent_node.children.append(current_node)
+            prev_parent, parent_node = parent_node, current_node
+        elif token.type == "RPAREN":
+            parent_node = prev_parent
+        else:
+            parent_node.children.append(current_node)
+
+    return ROOT
 
 
 def parse_expr(expr: Iterable[Token]) -> bool:
