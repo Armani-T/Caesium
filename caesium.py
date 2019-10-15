@@ -200,7 +200,7 @@ def do_xor(expr: Sequence[Token]) -> bool:
     return (left or right) and (not (left and right))
 
 
-def _run_code(line: str) -> str:
+def run_code(line: str) -> str:
     """
     Get code from the prompt, run and return its string value.
 
@@ -225,19 +225,6 @@ def _run_code(line: str) -> str:
         return "Unmatched bracket in expression."
 
 
-def run_prompt() -> None:
-    """Start and manage the language's REPL."""
-    print(
-        "%s v%s running on %s.\nPress Ctrl+C to exit."
-        % (PROGRAM_NAME, VERSION, platform)
-    )
-    while True:
-        try:
-            print(_run_code(input("%s " % PROMPT)))
-        except KeyboardInterrupt as error:
-            raise SystemExit from error
-
-
 def setup_cli() -> ArgumentParser:
     """Set up and define the parser and command line flags for the app."""
     parser = ArgumentParser(prog=PROGRAM_NAME)
@@ -257,16 +244,24 @@ def setup_cli() -> ArgumentParser:
     return parser
 
 
-def main() -> None:
+def main() -> int:
     """Parse the command line args and run the app accordingly."""
     parser = setup_cli()
     args = parser.parse_args()
     if args.version:
         print("%s v%s" % (PROGRAM_NAME, VERSION))
     elif args.expr:
-        print(_run_code(args.expr))
+        print(run_code(args.expr))
     else:
-        run_prompt()
+        print(
+            "%s v%s running on %s.\nPress Ctrl+C to exit."
+            % (PROGRAM_NAME, VERSION, platform)
+        )
+        while True:
+            try:
+                print(run_code(input("%s " % PROMPT)))
+            except KeyboardInterrupt as error:
+                raise SystemExit from error
     return 0
 
 
