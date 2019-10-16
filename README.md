@@ -168,7 +168,7 @@ $
 ## TODO
 
 - [ ] Add a proper parse tree.
-- [ ] Put Caesium in PyPI.
+- [ ] Put Caesium on PyPI.
 
 ## Development Setup
 
@@ -180,10 +180,13 @@ $
 
 1. Crete your feature branch by forking the `develop` branch.
 2. Run `black` on all the code in the repo.
-3. Add at least 1 test for your feature.
-4. Commit your changes.
-5. Push to `origin/develop`.
-6. Open a pull request.
+3. Commit your changes.
+4. Push to `origin/develop`.
+5. Open a pull request.
+
+## Notes
+
+Just lke the element Caesium, this app may also break down. In case it does, don't heitate to contact me (though I might be a bit slow) or patch it yourself if you so wish.
 
 ## Meta
 
