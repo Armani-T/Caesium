@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
+from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
 from sys import platform, exit as sys_exit
-from typing import Generator, List, Iterable, NamedTuple, Optional, Sequence
+from typing import Generator, Iterable
 
-PROGRAM_NAME, VERSION = "caesium", "0.4.2dev0"
+PROGRAM_NAME, VERSION = "caesium", "0.4.2dev1"
 KEYWORDS = (
     "true",
     "false",
@@ -40,12 +41,11 @@ REGEX_TOKENS = "|".join(
 )
 MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 
-Token = NamedTuple("Token", (("type", str), ("value", str)))
-Node = NamedTuple("Node", (("token", Token), ("children", List["Node"])))
+Token = namedtuple("Token", ("type", "value"))
+Node = namedtuple("Node", ("token", "children"))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
 
 is_keyword = lambda name: name.lower() in KEYWORDS
-get_name = lambda name: RUNTIME_VARS[name.lower()]
 store_name = lambda name, value: RUNTIME_VARS.update({name.lower(): value})
 
 
@@ -71,26 +71,44 @@ def tokenize(text: str) -> Generator[Token, None, None]:
             yield Token(match.lastgroup, match.group())
 
 
-def build_ast(tokens: Iterable[Token]):
-    OPERATORS = ("AND", "OR", "NOT", "XOR", "NAND", "NOR")
-    ROOT = Node(None, [])
-    parent_node = prev_parent = ROOT
+def build_ast(tokens: Iterable[Token]) -> Node:
+    """
+    Convert the token stream into an AST for parsing.
 
-    for token in tokens:
+    Parameters
+    ----------
+    tokens
+        A stream of tokens from the tokener.
+
+    Returns
+    -------
+    Node
+        The root node of the code's AST.
+    """
+    tree_root = Node(Token("ROOT", ""), [])
+    parents = [tree_root]
+
+    for index, token in enumerate(tokens):
+        current_parent = parents[-1]
         current_node = Node(token, [])
-        if token.type in OPERATORS:
-            parent_node.children.append(current_node)
-            current_node.children.append(parent_node.children.pop(-2))
-            prev_parent, parent_node = parent_node, current_node
-        elif token.type == "LPAREN":
-            parent_node.children.append(current_node)
-            prev_parent, parent_node = parent_node, current_node
-        elif token.type == "RPAREN":
-            parent_node = prev_parent
-        else:
-            parent_node.children.append(current_node)
 
-    return ROOT
+        if token.type in ("AND", "OR", "XOR", "NAND", "NOR", "EQUALS"):
+            current_node.children.append(current_parent.children.pop())
+            current_parent.children.append(current_node)
+            parents.append(current_node)
+        elif token.type == "NOT":
+            current_parent.children.append(current_node)
+            parents.append(current_node)
+        elif token.type == "LPAREN":
+            current_parent.children.append(current_node)
+            parents.append(current_node)
+        elif token.type == "RPAREN":
+            parents.pop()
+        elif token.type == "NAME":
+            current_parent.children.append(current_node)
+            parents.pop()
+
+    return tree_root.children[0]
 
 
 def parse_expr(expr: Iterable[Token]) -> bool:
@@ -101,6 +119,7 @@ def parse_expr(expr: Iterable[Token]) -> bool:
     ----------
     expr
         A sequence of tokens representing a single expression.
+
     Returns
     -------
     bool

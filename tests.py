@@ -84,7 +84,7 @@ def test_tokenize_raises_syntaxerror_on_invalid_char(text: str):
     (
         "E_VAR = e_var = TRUE",
         "true",
-        pytest.param("(True) | (False)", marks=pytest.mark.xfail),
+        pytest.param("quux = (foo = 1) | (bar = 0)", marks=pytest.mark.xfail),
     ),
 )
 def test_parse_expr(line: str):
@@ -173,7 +173,7 @@ def test_invalid_assignments(expr: str):
         ("quux & 1", False),
         ("true && a_var", True),
         ("true AND (NOT true OR false)", False),
-    )
+    ),
 )
 def test_do_and(code: str, expected: bool):
     expr = tuple(caesium.tokenize(code))
@@ -186,7 +186,7 @@ def test_do_and(code: str, expected: bool):
         ("quux | 1", True),
         ("false || a_var", True),
         ("true OR (NOT true AND false)", True),
-    )
+    ),
 )
 def test_do_or(code: str, expected: bool):
     expr = tuple(caesium.tokenize(code))
@@ -195,10 +195,7 @@ def test_do_or(code: str, expected: bool):
 
 @pytest.mark.parametrize(
     "code,expected",
-    (
-        ("quux ^ 1", True),
-        ("true XOR (NOT true NOR false)", False),
-    )
+    (("quux ^ 1", True), ("true XOR (NOT true NOR false)", False)),
 )
 def test_do_xor(code: str, expected: bool):
     expr = tuple(caesium.tokenize(code))
