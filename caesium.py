@@ -6,7 +6,7 @@ from random import choice
 from sys import platform, exit as sys_exit
 from typing import Generator, Iterable
 
-PROGRAM_NAME, VERSION = "caesium", "0.5.0dev3"
+PROGRAM_NAME, VERSION = "caesium", "0.5.0dev4"
 KEYWORDS = (
     "true",
     "false",
@@ -44,9 +44,6 @@ MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 Token = namedtuple("Token", ("type", "value"))
 Node = namedtuple("Node", ("token", "children"))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
-
-is_keyword = lambda name: name.lower() in KEYWORDS
-store_name = lambda name, value: RUNTIME_VARS.update({name.lower(): value})
 
 
 def tokenize(text: str) -> Generator[Token, None, None]:
@@ -124,8 +121,8 @@ def visit_tree(ast: Node) -> bool:
     bool
         The expression's evaluated value.
     """
-    if not ast.children:
-        raise SyntaxError("Invalid syntax.")
+    if isinstance(ast, bool):
+        return ast
 
     node_functions = {
         "NAME": get_name,
@@ -142,53 +139,53 @@ def visit_tree(ast: Node) -> bool:
             ast.children[index] = node_functions[child.token.type](child)
         elif isinstance(child, bool):
             continue
-        else:
-            raise SyntaxError("Invalid syntax.")
 
     return node_functions[ast.token.type](ast)
 
 
-def parse_name(name: str) -> bool:
+def get_name(node: Node) -> bool:
     """
-    Evaluate the value of `name`.
+    Evaluate the value of a NAME node.
 
     Parameters
     ----------
-    name
-        The name to be evaluated.
+    node
+        The node to be evaluated.
 
     Returns
     -------
     bool
-        The name's evaluated value.
+        The node's evaluated value.
     """
-    return {
-        "exit": lambda _: sys_exit(0),
-        "random": lambda _: choice((True, False)),
-    }.get(name, get_name)(name)
+    name = node.token.value.lower()
+    if name == "exit":
+        sys_exit(0)
+    if name == "random":
+        return choice((True, False))
+    return RUNTIME_VARS[name]
 
 
-def do_assignment(expr: Sequence[Token]) -> bool:
+def set_name(node: Node) -> bool:
     """
     Evaluate and carry out an assignment expression.
 
     Parameters
     ----------
-    expr
-        The sequence of tokens representing a single expression.
+    node
+        The ast representing a single expression.
 
     Returns
     -------
     bool
         The expression's evaluated value.
     """
-    var_name = expr[0].value
-    var_value = parse_expr(expr[2:])
+    var_name = node.children[0].value.lower()
+    var_value = visit_tree(node.children[1])
 
-    if is_keyword(var_name):
+    if var_name.lower() in KEYWORDS:
         raise NameError('Name "%s" is reserved.' % var_name)
 
-    store_name(var_name, var_value)
+    RUNTIME_VARS[var_name] = var_value
     return var_value
 
 
