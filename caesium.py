@@ -6,7 +6,7 @@ from random import choice
 from sys import platform, exit as sys_exit
 from typing import Generator, Iterable
 
-PROGRAM_NAME, VERSION = "caesium", "0.5.0dev4"
+PROGRAM_NAME, VERSION = "caesium", "0.5.0dev5"
 KEYWORDS = (
     "true",
     "false",
@@ -218,12 +218,12 @@ def run_code(line: str) -> str:
     Returns
     -------
     str
-        Either the string value of the evaluated code or an error
+        Either the string value of the evaluated line or an error
         message.
     """
     try:
-        return str(parse_expr(tokenize(line)))
-    except (SyntaxError, NameError, AttributeError) as error:
+        return str(visit_tree(build_ast(tokenize(line))))
+    except (NameError, SyntaxError) as error:
         return error.args[0]
     except KeyError as error:
         return 'Undefined name "%s".' % error.args[0]
