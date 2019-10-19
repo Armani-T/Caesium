@@ -6,21 +6,7 @@ from random import choice
 from sys import platform, exit as sys_exit
 from typing import Generator, Iterable
 
-PROGRAM_NAME, VERSION = "caesium", "0.5.0dev5"
-KEYWORDS = (
-    "true",
-    "false",
-    "and",
-    "or",
-    "not",
-    "xor",
-    "nand",
-    "nor",
-    "exit",
-    "random",
-    "1",
-    "0",
-)
+PROGRAM_NAME, VERSION = "caesium", "0.5.0dev6"
 PROMPT = "Cs>"
 REGEX_TOKENS = "|".join(
     (
@@ -65,7 +51,7 @@ def tokenize(text: str) -> Generator[Token, None, None]:
         if match.lastgroup == "INVALID_CHAR":
             raise SyntaxError('Invalid syntax: "%s".' % match.group())
         if match.lastgroup not in ("COMMENT", "WHITESPACE"):
-            yield Token(match.lastgroup, match.group())
+            yield Token(match.lastgroup, match.group().lower())
 
 
 def build_ast(tokens: Iterable[Token]) -> Node:
@@ -93,15 +79,14 @@ def build_ast(tokens: Iterable[Token]) -> Node:
             current_node.children.append(parent_node.children.pop())
             parent_node.children.append(current_node)
             parents.append(current_node)
-        elif token.type == "NOT":
-            parent_node.children.append(current_node)
-            parents.append(current_node)
-        elif token.type == "LPAREN":
+        elif token.type in ("NOT", "LPAREN"):
             parent_node.children.append(current_node)
             parents.append(current_node)
         elif token.type == "RPAREN":
-            parents.pop()
-        elif token.type == "NAME":
+            parent = parents.pop()
+            while parent.token.type != "LPAREN":
+                parent = parents.pop()
+        else:
             parent_node.children.append(current_node)
 
     return parents[0]
@@ -124,7 +109,7 @@ def visit_tree(ast: Node) -> bool:
     if isinstance(ast, bool):
         return ast
 
-    node_functions = {
+    return {
         "NAME": get_name,
         "EQUALS": set_name,
         "AND": do_and,
@@ -133,14 +118,9 @@ def visit_tree(ast: Node) -> bool:
         "NAND": lambda node: not do_and(node),
         "NOR": lambda node: not do_or(node),
         "XOR": do_xor,
-    }
-    for index, child in enumerate(ast.children[:]):
-        if isinstance(child, Node):
-            ast.children[index] = node_functions[child.token.type](child)
-        elif isinstance(child, bool):
-            continue
-
-    return node_functions[ast.token.type](ast)
+        "ROOT": lambda node: visit_tree(node.children[0]),
+        "LPAREN": lambda node: visit_tree(node.children[0]),
+    }[ast.token.type](ast)
 
 
 def get_name(node: Node) -> bool:
@@ -157,7 +137,7 @@ def get_name(node: Node) -> bool:
     bool
         The node's evaluated value.
     """
-    name = node.token.value.lower()
+    name = node.token.value
     if name == "exit":
         sys_exit(0)
     if name == "random":
@@ -179,10 +159,24 @@ def set_name(node: Node) -> bool:
     bool
         The expression's evaluated value.
     """
-    var_name = node.children[0].value.lower()
+    KEYWORDS = (
+        "true",
+        "false",
+        "and",
+        "or",
+        "not",
+        "xor",
+        "nand",
+        "nor",
+        "exit",
+        "random",
+        "1",
+        "0",
+    )
+    var_name = node.children[0].token.value
     var_value = visit_tree(node.children[1])
 
-    if var_name.lower() in KEYWORDS:
+    if var_name in KEYWORDS:
         raise NameError('Name "%s" is reserved.' % var_name)
 
     RUNTIME_VARS[var_name] = var_value
@@ -227,6 +221,8 @@ def run_code(line: str) -> str:
         return error.args[0]
     except KeyError as error:
         return 'Undefined name "%s".' % error.args[0]
+    except IndexError:
+        return "Invalid syntax."
     except ValueError:
         return "Unmatched bracket in expression."
 
