@@ -6,7 +6,7 @@ from random import choice
 from sys import platform, exit as sys_exit
 from typing import Generator, Iterable
 
-PROGRAM_NAME, VERSION = "caesium", "0.4.2dev1"
+PROGRAM_NAME, VERSION = "caesium", "0.5.0dev2"
 KEYWORDS = (
     "true",
     "false",
@@ -85,53 +85,67 @@ def build_ast(tokens: Iterable[Token]) -> Node:
     Node
         The root node of the code's AST.
     """
-    tree_root = Node(Token("ROOT", ""), [])
-    parents = [tree_root]
+    parents = [Node(Token("ROOT", ""), [])]
+    # Include the root node as the first parent.
 
-    for index, token in enumerate(tokens):
-        current_parent = parents[-1]
+    for token in tokens:
+        parent_node = parents[-1]
         current_node = Node(token, [])
 
         if token.type in ("AND", "OR", "XOR", "NAND", "NOR", "EQUALS"):
-            current_node.children.append(current_parent.children.pop())
-            current_parent.children.append(current_node)
+            current_node.children.append(parent_node.children.pop())
+            parent_node.children.append(current_node)
             parents.append(current_node)
         elif token.type == "NOT":
-            current_parent.children.append(current_node)
+            parent_node.children.append(current_node)
             parents.append(current_node)
         elif token.type == "LPAREN":
-            current_parent.children.append(current_node)
+            parent_node.children.append(current_node)
             parents.append(current_node)
         elif token.type == "RPAREN":
             parents.pop()
         elif token.type == "NAME":
-            current_parent.children.append(current_node)
-            parents.pop()
+            parent_node.children.append(current_node)
 
-    return tree_root.children[0]
+    return parents[0]
 
 
-def parse_expr(expr: Iterable[Token]) -> bool:
+def visit_tree(ast: Node) -> bool:
     """
-    Evaluate a single expression consisting of tokens.
+    Evaluate part of or the whole of an expression.
 
     Parameters
     ----------
-    expr
-        A sequence of tokens representing a single expression.
+    ast
+        A root node and its children which represent an expression.
 
     Returns
     -------
     bool
-        The full expression's evaluated value or None if the expression
-        is empty.
+        The expression's evaluated value.
     """
-    tokens = tuple(expr)
-    if not tokens:
-        raise AttributeError("")
-    if len(tokens) == 1:
-        return parse_name(tokens[0].value)
-    return parse_operation(tokens)
+    if not ast.children:
+        raise SyntaxError("Invalid syntax.")
+
+    node_functions = {
+        "NAME": get_name,
+        "EQUALS": set_name,
+        "AND": do_and,
+        "OR": do_or,
+        "NOT": lambda node: not visit_tree(node.children[0]),
+        "NAND": lambda node: not do_and(node),
+        "NOR": lambda node: not do_or(node),
+        "XOR": do_xor,
+    }
+    for index, child in enumerate(ast.children[:]):
+        if isinstance(child, Node):
+            ast.children[index] = node_functions[child.token.type](child)
+        elif isinstance(child, bool):
+            continue
+        else:
+            raise SyntaxError("Invalid syntax.")
+
+    return node_functions[ast.token.type](ast)
 
 
 def parse_name(name: str) -> bool:
