@@ -21,7 +21,7 @@ Example:
 
 ```
 $ caesium
-caesium v0.4.1 running on win32.
+caesium v0.5.0dev3 running on win32.
 Press Ctrl+C or type "exit" to quit.
 Cs> 
 ```

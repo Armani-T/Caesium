@@ -6,7 +6,7 @@ from random import choice
 from sys import platform, exit as sys_exit
 from typing import Generator, Iterable
 
-PROGRAM_NAME, VERSION = "caesium", "0.5.0dev2"
+PROGRAM_NAME, VERSION = "caesium", "0.5.0dev3"
 KEYWORDS = (
     "true",
     "false",
@@ -168,39 +168,6 @@ def parse_name(name: str) -> bool:
     }.get(name, get_name)(name)
 
 
-def parse_operation(expr: Sequence[Token]) -> bool:
-    """
-    Evaluate part of or the whole of an expression.
-
-    Parameters
-    ----------
-    expr
-        The sequence of tokens representing a single expression.
-    Returns
-    -------
-    bool
-        The expression's evaluated value.
-    """
-    if expr[0].type == "LPAREN":
-        return do_parens(expr)
-
-    if expr[0].type == "NOT":
-        return not parse_expr(expr[1:])
-
-    def throw_error(expr):
-        line = " ".join((token.value for token in expr))
-        raise SyntaxError('Invalid syntax: "%s".' % line)
-
-    return {
-        "EQUALS": do_assignment,
-        "AND": do_and,
-        "OR": do_or,
-        "XOR": do_xor,
-        "NAND": lambda expr: not do_and(expr),
-        "NOR": lambda expr: not do_or(expr),
-    }.get(expr[1].type, throw_error)(expr)
-
-
 def do_assignment(expr: Sequence[Token]) -> bool:
     """
     Evaluate and carry out an assignment expression.
@@ -225,39 +192,26 @@ def do_assignment(expr: Sequence[Token]) -> bool:
     return var_value
 
 
-def do_parens(expr: Sequence[Token]) -> bool:
-    """Evaluate the expression inside a pair of parentheses."""
-    skips = expr.count(Token("LPAREN", "(")) - 1
-    rparen_index = expr.index(Token("RPAREN", ")"))
-    while skips > 0:
-        lparen_index = expr.index(Token("LPAREN", "("))
-        expr_ = expr[lparen_index:]
-        rparen_index = expr_.index(("RPAREN", ")")) + 1
-        skips -= 1
-
-    return parse_expr(expr[1:rparen_index])
-
-
-def do_and(expr: Sequence[Token]) -> bool:
+def do_and(node: Node) -> bool:
     """Evaluate the value of an AND expression."""
-    return parse_name(expr[0].value) and parse_expr(expr[2:])
+    return visit_tree(node.children[0]) and visit_tree(node.children[1])
 
 
-def do_or(expr: Sequence[Token]) -> bool:
+def do_or(node: Node) -> bool:
     """Evaluate the value of an OR expression."""
-    return parse_name(expr[0].value) or parse_expr(expr[2:])
+    return visit_tree(node.children[0]) or visit_tree(node.children[1])
 
 
-def do_xor(expr: Sequence[Token]) -> bool:
+def do_xor(node: Node) -> bool:
     """Evaluate the value of an XOR expression."""
-    left = parse_name(expr[0].value)
-    right = parse_expr(expr[2:])
+    left = visit_tree(node.children[0])
+    right = visit_tree(node.children[1])
     return (left or right) and (not (left and right))
 
 
 def run_code(line: str) -> str:
     """
-    Get code from the prompt, run and return its string value.
+    Run and return `line`'s string value.
 
     Parameters
     ----------
