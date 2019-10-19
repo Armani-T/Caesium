@@ -6,7 +6,10 @@ from random import choice
 from sys import platform, exit as sys_exit
 from typing import Generator, Iterable, Sequence
 
-PROGRAM_NAME, VERSION = "caesium", "0.4.1"
+__author__ = "Armani Tallam"
+__program__ = "caesium"
+__version__ = "0.4.1"
+
 KEYWORDS = (
     "true",
     "false",
@@ -227,7 +230,7 @@ def run_code(line: str) -> str:
 
 def setup_cli() -> ArgumentParser:
     """Set up and define the parser and command line flags for the app."""
-    parser = ArgumentParser(prog=PROGRAM_NAME)
+    parser = ArgumentParser(prog=__program__)
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-v",
@@ -249,13 +252,13 @@ def main() -> int:
     parser = setup_cli()
     args = parser.parse_args()
     if args.version:
-        print("%s v%s" % (PROGRAM_NAME, VERSION))
+        print("%s v%s" % (__program__, __version__))
     elif args.expr:
         print(run_code(args.expr))
     else:
         print(
             "%s v%s running on %s.\nPress Ctrl+C to exit."
-            % (PROGRAM_NAME, VERSION, platform)
+            % (__program__, __version__, platform)
         )
         while True:
             try:
