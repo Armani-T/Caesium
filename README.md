@@ -167,7 +167,7 @@ $
 
 ## TODO
 
-- [ ] Add a proper parse tree.
+- [x] Add a proper parse tree.
 - [ ] Put Caesium in PyPI.
 
 ## Development Setup
