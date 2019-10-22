@@ -68,6 +68,21 @@ def test_tokenize_raises_syntaxerror_on_invalid_char(text: str) -> None:
             ),
             True,
         ),
+        (
+            caesium.Node(
+                caesium.Token("OR", "|"),
+                [
+                    caesium.Node(caesium.Token("NAME", "0"), []),
+                    caesium.Node(
+                        caesium.Token("LPAREN", "("),
+                        [
+                            caesium.Node(caesium.Token("NAME", "false"), []),
+                        ],
+                    ),
+                ],
+            ),
+            False,
+        ),
     ),
 )
 def test_do_or(tree: caesium.Node, expected: bool) -> None:
@@ -88,6 +103,22 @@ def test_do_or(tree: caesium.Node, expected: bool) -> None:
             ),
             False,
         ),
+        (
+            caesium.Node(
+                caesium.Token("AND", "&&"),
+                [
+                    caesium.Node(caesium.Token("NAME", "true"), []),
+                    caesium.Node(
+                        caesium.Token("EQUALS", "="),
+                        [
+                            caesium.Node(caesium.Token("NAME", "x"), []),
+                            caesium.Node(caesium.Token("NAME", "TRUE"), []),
+                        ],
+                    ),
+                ],
+            ),
+            True,
+        ),
     ),
 )
 def test_do_and(tree: caesium.Node, expected: bool) -> None:
@@ -107,6 +138,22 @@ def test_do_and(tree: caesium.Node, expected: bool) -> None:
                 ],
             ),
             False,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("XOR", "XOR"),
+                [
+                    caesium.Node(caesium.Token("NAME", "true"), []),
+                    caesium.Node(
+                        caesium.Token("AND", "AND"),
+                        [
+                            caesium.Node(caesium.Token("NAME", "1"), []),
+                            caesium.Node(caesium.Token("NAME", "false"), []),
+                        ],
+                    ),
+                ],
+            ),
+            True,
         ),
     ),
 )

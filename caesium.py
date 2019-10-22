@@ -134,12 +134,12 @@ def get_name(node: Node) -> bool:
     bool
         The node's evaluated value.
     """
-    name = node.token.value
+    name = node.token.value.lower()
     if name == "exit":
         sys_exit(0)
     if name == "random":
         return choice((True, False))
-    return RUNTIME_VARS[name.lower()]
+    return RUNTIME_VARS[name]
 
 
 def set_name(node: Node) -> bool:
