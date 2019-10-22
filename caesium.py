@@ -8,7 +8,7 @@ from typing import Generator, Iterable
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "0.4.1"
+__version__ = "0.5.0"
 PROMPT = "Cs>"
 REGEX_TOKENS = "|".join(
     (
@@ -257,7 +257,7 @@ def main() -> int:
         print(run_code(args.expr))
     else:
         print(
-            "%s v%s running on %s.\nPress Ctrl+C to exit."
+            '%s v%s running on %s.\nPress Ctrl+C or enter "exit" to exit.'
             % (__program__, __version__, platform)
         )
         while True:
