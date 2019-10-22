@@ -5,6 +5,7 @@ import pytest
 import caesium
 
 
+@pytest.mark.tokenizer
 @pytest.mark.parametrize(
     "source,tokens",
     (
@@ -32,17 +33,20 @@ import caesium
         ("false", (caesium.Token("NAME", "false"),)),
     ),
 )
-def test_tokenize(source: str, tokens: Tuple[caesium.Token]):
+@pytest.mark.tokenizer
+def test_tokenize(source: str, tokens: Tuple[caesium.Token, ...]):
     stream = tuple(caesium.tokenize(source))
     assert stream == tokens
 
 
+@pytest.mark.tokenizer
 @pytest.mark.parametrize("text", ("1 `OR` 0", "1 - 0", "~1/", "+1"))
 def test_tokenize_raises_syntaxerror_on_invalid_char(text: str):
     with pytest.raises(SyntaxError):
         tuple(caesium.tokenize(text))
 
 
+@pytest.mark.cli
 @pytest.mark.parametrize(
     "flags,attr_name",
     ((["-v"], "version"), (["--expr", "true ^ false | 0 & 1"], "expr")),
@@ -53,6 +57,7 @@ def test_valid_cli_flags(flags: List[str], attr_name: str):
     assert getattr(args, attr_name)
 
 
+@pytest.mark.cli
 @pytest.mark.parametrize("flags", (["-a"], ["--wrong"], ["--expr"]))
 def test_invalid_cli_flags(flags: List[str]):
     with pytest.raises(SystemExit):
@@ -61,4 +66,4 @@ def test_invalid_cli_flags(flags: List[str]):
 
 
 if __name__ == "__main__":
-    pytest.main(["-ra"])
+    pytest.main(["--strict", "-ra"])
