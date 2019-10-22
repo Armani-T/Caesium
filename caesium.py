@@ -6,7 +6,7 @@ from random import choice
 from sys import platform, exit as sys_exit
 from typing import Generator, Iterable
 
-PROGRAM_NAME, VERSION = "caesium", "0.5.0dev6"
+PROGRAM_NAME, VERSION = "caesium", "0.5.0dev7"
 PROMPT = "Cs>"
 REGEX_TOKENS = "|".join(
     (
@@ -51,7 +51,7 @@ def tokenize(text: str) -> Generator[Token, None, None]:
         if match.lastgroup == "INVALID_CHAR":
             raise SyntaxError('Invalid syntax: "%s".' % match.group())
         if match.lastgroup not in ("COMMENT", "WHITESPACE"):
-            yield Token(match.lastgroup, match.group().lower())
+            yield Token(match.lastgroup, match.group())
 
 
 def build_ast(tokens: Iterable[Token]) -> Node:
@@ -69,7 +69,7 @@ def build_ast(tokens: Iterable[Token]) -> Node:
         The root node of the code's AST.
     """
     parents = [Node(Token("ROOT", ""), [])]
-    # Include the root node as the first parent.
+    # The root node is always the first parent.
 
     for token in tokens:
         parent_node = parents[-1]
@@ -106,9 +106,6 @@ def visit_tree(ast: Node) -> bool:
     bool
         The expression's evaluated value.
     """
-    if isinstance(ast, bool):
-        return ast
-
     return {
         "NAME": get_name,
         "EQUALS": set_name,
@@ -142,7 +139,7 @@ def get_name(node: Node) -> bool:
         sys_exit(0)
     if name == "random":
         return choice((True, False))
-    return RUNTIME_VARS[name]
+    return RUNTIME_VARS[name.lower()]
 
 
 def set_name(node: Node) -> bool:
@@ -179,7 +176,7 @@ def set_name(node: Node) -> bool:
     if var_name in KEYWORDS:
         raise NameError('Name "%s" is reserved.' % var_name)
 
-    RUNTIME_VARS[var_name] = var_value
+    RUNTIME_VARS[var_name.lower()] = var_value
     return var_value
 
 
