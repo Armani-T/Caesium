@@ -4,26 +4,11 @@ from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
 from sys import platform, exit as sys_exit
-from typing import Generator, Iterable, Pattern, Sequence
+from typing import Generator, Iterable
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
 __version__ = "0.4.1"
-
-KEYWORDS = (
-    "true",
-    "false",
-    "and",
-    "or",
-    "not",
-    "xor",
-    "nand",
-    "nor",
-    "exit",
-    "random",
-    "1",
-    "0",
-)
 PROMPT = "Cs>"
 REGEX_TOKENS = "|".join(
     (
@@ -34,7 +19,6 @@ REGEX_TOKENS = "|".join(
         r"(?P<NAND>\bnand\b|@)",
         r"(?P<NOR>\bnor\b|~)",
         r"(?P<NAME>\b\w+\b)",
-        r"(?P<EQUALS>\=)",
         r"(?P<LPAREN>\()",
         r"(?P<RPAREN>\))",
         r"(?P<WHITESPACE>\s+)",
@@ -45,11 +29,8 @@ REGEX_TOKENS = "|".join(
 MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 
 Token = namedtuple("Token", ("type", "value"))
+Node = namedtuple("Node", ("token", "children"))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
-
-is_keyword = lambda name: name.lower() in KEYWORDS
-get_name = lambda name: RUNTIME_VARS[name.lower()]
-store_name = lambda name, value: RUNTIME_VARS.update({name.lower(): value})
 
 
 def tokenize(text: str, regex: Pattern[str]) -> Generator[Token, None, None]:
@@ -77,138 +58,152 @@ def tokenize(text: str, regex: Pattern[str]) -> Generator[Token, None, None]:
             yield Token(match.lastgroup, match.group())
 
 
-def parse_expr(expr: Iterable[Token]) -> bool:
+def build_ast(tokens: Iterable[Token]) -> Node:
     """
-    Evaluate a single expression consisting of tokens.
+    Convert the token stream into an AST for parsing.
 
     Parameters
     ----------
-    expr
-        A sequence of tokens representing a single expression.
-    Returns
-    -------
-    bool
-        The full expression's evaluated value or None if the expression
-        is empty.
-    """
-    tokens = tuple(expr)
-    if not tokens:
-        raise AttributeError("")
-    if len(tokens) == 1:
-        return parse_name(tokens[0].value)
-    return parse_operation(tokens)
-
-
-def parse_name(name: str) -> bool:
-    """
-    Evaluate the value of `name`.
-
-    Parameters
-    ----------
-    name
-        The name to be evaluated.
+    tokens
+        A stream of tokens from the tokener.
 
     Returns
     -------
-    bool
-        The name's evaluated value.
+    Node
+        The root node of the code's AST.
     """
-    return {
-        "exit": lambda _: sys_exit(0),
-        "random": lambda _: choice((True, False)),
-    }.get(name, get_name)(name)
+    parents = [Node(Token("ROOT", ""), [])]
+    # The root node is always the first parent.
+
+    for token in tokens:
+        parent_node = parents[-1]
+        current_node = Node(token, [])
+
+        if token.type in ("AND", "OR", "XOR", "NAND", "NOR", "EQUALS"):
+            current_node.children.append(parent_node.children.pop())
+            parent_node.children.append(current_node)
+            parents.append(current_node)
+        elif token.type in ("NOT", "LPAREN"):
+            parent_node.children.append(current_node)
+            parents.append(current_node)
+        elif token.type == "RPAREN":
+            parent = parents.pop()
+            while parent.token.type != "LPAREN":
+                parent = parents.pop()
+        else:
+            parent_node.children.append(current_node)
+
+    return parents[0]
 
 
-def parse_operation(expr: Sequence[Token]) -> bool:
+def visit_tree(ast: Node) -> bool:
     """
     Evaluate part of or the whole of an expression.
 
     Parameters
     ----------
-    expr
-        The sequence of tokens representing a single expression.
+    ast
+        A root node and its children which represent an expression.
+
     Returns
     -------
     bool
         The expression's evaluated value.
     """
-    if expr[0].type == "LPAREN":
-        return do_parens(expr)
-
-    if expr[0].type == "NOT":
-        return not parse_expr(expr[1:])
-
-    def throw_error(expr):
-        line = " ".join((token.value for token in expr))
-        raise SyntaxError('Error: Invalid syntax: "%s".' % line)
-
     return {
-        "EQUALS": do_assignment,
+        "NAME": get_name,
+        "EQUALS": set_name,
         "AND": do_and,
         "OR": do_or,
+        "NOT": lambda node: not visit_tree(node.children[0]),
+        "NAND": lambda node: not do_and(node),
+        "NOR": lambda node: not do_or(node),
         "XOR": do_xor,
-        "NAND": lambda expr: not do_and(expr),
-        "NOR": lambda expr: not do_or(expr),
-    }.get(expr[1].type, throw_error)(expr)
+        "ROOT": lambda node: visit_tree(node.children[0]),
+        "LPAREN": lambda node: visit_tree(node.children[0]),
+    }[ast.token.type](ast)
 
 
-def do_assignment(expr: Sequence[Token]) -> bool:
+def get_name(node: Node) -> bool:
+    """
+    Evaluate the value of a NAME node.
+
+    Parameters
+    ----------
+    node
+        The node to be evaluated.
+
+    Returns
+    -------
+    bool
+        The node's evaluated value.
+    """
+    name = node.token.value.lower()
+    if name == "exit":
+        sys_exit(0)
+    if name == "random":
+        return choice((True, False))
+    return RUNTIME_VARS[name]
+
+
+def set_name(node: Node) -> bool:
     """
     Evaluate and carry out an assignment expression.
 
     Parameters
     ----------
-    expr
-        The sequence of tokens representing a single expression.
+    node
+        The ast representing a single expression.
 
     Returns
     -------
     bool
         The expression's evaluated value.
     """
-    var_name = expr[0].value
-    var_value = parse_expr(expr[2:])
+    KEYWORDS = (
+        "true",
+        "false",
+        "and",
+        "or",
+        "not",
+        "xor",
+        "nand",
+        "nor",
+        "exit",
+        "random",
+        "1",
+        "0",
+    )
+    var_name = node.children[0].token.value
+    var_value = visit_tree(node.children[1])
 
-    if is_keyword(var_name):
-        raise NameError('Error: Name "%s" is reserved.' % var_name)
+    if var_name in KEYWORDS:
+        raise NameError('Name "%s" is reserved.' % var_name)
 
-    store_name(var_name, var_value)
+    RUNTIME_VARS[var_name.lower()] = var_value
     return var_value
 
 
-def do_parens(expr: Sequence[Token]) -> bool:
-    """Evaluate the expression inside a pair of parentheses."""
-    skips = expr.count(Token("LPAREN", "(")) - 1
-    rparen_index = expr.index(Token("RPAREN", ")"))
-    while skips > 0:
-        lparen_index = expr.index(Token("LPAREN", "("))
-        expr_ = expr[lparen_index:]
-        rparen_index = expr_.index(("RPAREN", ")")) + 1
-        skips -= 1
-
-    return parse_expr(expr[1:rparen_index])
-
-
-def do_and(expr: Sequence[Token]) -> bool:
+def do_and(node: Node) -> bool:
     """Evaluate the value of an AND expression."""
-    return parse_name(expr[0].value) and parse_expr(expr[2:])
+    return visit_tree(node.children[0]) and visit_tree(node.children[1])
 
 
-def do_or(expr: Sequence[Token]) -> bool:
+def do_or(node: Node) -> bool:
     """Evaluate the value of an OR expression."""
-    return parse_name(expr[0].value) or parse_expr(expr[2:])
+    return visit_tree(node.children[0]) or visit_tree(node.children[1])
 
 
-def do_xor(expr: Sequence[Token]) -> bool:
+def do_xor(node: Node) -> bool:
     """Evaluate the value of an XOR expression."""
-    left = parse_name(expr[0].value)
-    right = parse_expr(expr[2:])
+    left = visit_tree(node.children[0])
+    right = visit_tree(node.children[1])
     return (left or right) and (not (left and right))
 
 
 def run_code(line: str) -> str:
     """
-    Get code from the prompt, run and return its string value.
+    Run and return `line`'s string value.
 
     Parameters
     ----------
@@ -218,15 +213,17 @@ def run_code(line: str) -> str:
     Returns
     -------
     str
-        Either the string value of the evaluated code or an error
+        Either the string value of the evaluated line or an error
         message.
     """
     try:
-        return str(parse_expr(tokenize(line, MASTER_REGEX)))
-    except (SyntaxError, NameError, AttributeError) as error:
+        return str(visit_tree(build_ast(tokenize(line))))
+    except (NameError, SyntaxError) as error:
         return error.args[0]
     except KeyError as error:
-        return 'Error: Undefined name "%s".' % error.args[0]
+        return 'Undefined name "%s".' % error.args[0]
+    except IndexError:
+        return "Invalid syntax."
     except ValueError:
         return "Error: Unmatched bracket in expression."
 
