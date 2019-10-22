@@ -4,7 +4,7 @@ from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
 from sys import platform, exit as sys_exit
-from typing import Generator, Iterable, Sequence
+from typing import Generator, Iterable, Pattern, Sequence
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
@@ -52,7 +52,7 @@ get_name = lambda name: RUNTIME_VARS[name.lower()]
 store_name = lambda name, value: RUNTIME_VARS.update({name.lower(): value})
 
 
-def tokenize(text: str) -> Generator[Token, None, None]:
+def tokenize(text: str, regex: Pattern[str]) -> Generator[Token, None, None]:
     """
     Convert the source code into a stream of tokens.
 
@@ -60,16 +60,19 @@ def tokenize(text: str) -> Generator[Token, None, None]:
     ----------
     text
         The source code to tokenize.
+    regex
+        A combination of all the language tokens. It will be used to
+        generate tokens.
 
     Yields
     ------
     Token
         A namedtuple with only 2 attributes: `type` and `text`.
     """
-    scanner = MASTER_REGEX.scanner(text)
+    scanner = regex.scanner(text)
     for match in iter(scanner.match, None):
         if match.lastgroup == "INVALID_CHAR":
-            raise SyntaxError('Invalid syntax: "%s".' % match.group())
+            raise SyntaxError('Error: Invalid syntax: "%s".' % match.group())
         if match.lastgroup not in ("COMMENT", "WHITESPACE"):
             yield Token(match.lastgroup, match.group())
 
@@ -137,7 +140,7 @@ def parse_operation(expr: Sequence[Token]) -> bool:
 
     def throw_error(expr):
         line = " ".join((token.value for token in expr))
-        raise SyntaxError('Invalid syntax: "%s".' % line)
+        raise SyntaxError('Error: Invalid syntax: "%s".' % line)
 
     return {
         "EQUALS": do_assignment,
@@ -167,7 +170,7 @@ def do_assignment(expr: Sequence[Token]) -> bool:
     var_value = parse_expr(expr[2:])
 
     if is_keyword(var_name):
-        raise NameError('Name "%s" is reserved.' % var_name)
+        raise NameError('Error: Name "%s" is reserved.' % var_name)
 
     store_name(var_name, var_value)
     return var_value
@@ -219,13 +222,13 @@ def run_code(line: str) -> str:
         message.
     """
     try:
-        return str(parse_expr(tokenize(line)))
+        return str(parse_expr(tokenize(line, MASTER_REGEX)))
     except (SyntaxError, NameError, AttributeError) as error:
         return error.args[0]
     except KeyError as error:
-        return 'Undefined name "%s".' % error.args[0]
+        return 'Error: Undefined name "%s".' % error.args[0]
     except ValueError:
-        return "Unmatched bracket in expression."
+        return "Error: Unmatched bracket in expression."
 
 
 def setup_cli() -> ArgumentParser:
