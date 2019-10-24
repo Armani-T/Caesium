@@ -75,9 +75,7 @@ def test_tokenize_raises_syntaxerror_on_invalid_char(text: str) -> None:
                     caesium.Node(caesium.Token("NAME", "0"), []),
                     caesium.Node(
                         caesium.Token("LPAREN", "("),
-                        [
-                            caesium.Node(caesium.Token("NAME", "false"), []),
-                        ],
+                        [caesium.Node(caesium.Token("NAME", "false"), [])],
                     ),
                 ],
             ),

@@ -4,29 +4,33 @@ from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
 from sys import platform, exit as sys_exit
-from typing import Generator, Iterable
+from typing import Generator, Iterable, Pattern
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "0.5.0"
+__version__ = "0.5.1"
+
 PROMPT = "Cs>"
-REGEX_TOKENS = "|".join(
-    (
-        r"(?P<NOT>\bnot\b|!)",
-        r"(?P<OR>\bor\b|\|\||\|)",
-        r"(?P<AND>\band\b|&&|&)",
-        r"(?P<XOR>\bxor\b|\^)",
-        r"(?P<NAND>\bnand\b|@)",
-        r"(?P<NOR>\bnor\b|~)",
-        r"(?P<NAME>\b\w+\b)",
-        r"(?P<LPAREN>\()",
-        r"(?P<RPAREN>\))",
-        r"(?P<WHITESPACE>\s+)",
-        r"(?P<COMMENT>#.*$)",
-        r"(?P<INVALID_CHAR>.)",
-    )
+MASTER_REGEX = re_compile(
+    "|".join(
+        (
+            r"(?P<NOT>\bnot\b|!)",
+            r"(?P<OR>\bor\b|\|\||\|)",
+            r"(?P<AND>\band\b|&&|&)",
+            r"(?P<XOR>\bxor\b|\^)",
+            r"(?P<NAND>\bnand\b|@)",
+            r"(?P<NOR>\bnor\b|~)",
+            r"(?P<EQUALS>=)",
+            r"(?P<NAME>\b\w+\b)",
+            r"(?P<LPAREN>\()",
+            r"(?P<RPAREN>\))",
+            r"(?P<WHITESPACE>\s+)",
+            r"(?P<COMMENT>#.*$)",
+            r"(?P<INVALID_CHAR>.)",
+        )
+    ),
+    IGNORECASE,
 )
-MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 
 Token = namedtuple("Token", ("type", "value"))
 Node = namedtuple("Node", ("token", "children"))
@@ -174,13 +178,13 @@ def set_name(node: Node) -> bool:
         "1",
         "0",
     )
-    var_name = node.children[0].token.value
+    var_name = node.children[0].token.value.lower()
     var_value = visit_tree(node.children[1])
 
     if var_name in KEYWORDS:
         raise NameError('Name "%s" is reserved.' % var_name)
 
-    RUNTIME_VARS[var_name.lower()] = var_value
+    RUNTIME_VARS[var_name] = var_value
     return var_value
 
 
@@ -196,9 +200,8 @@ def do_or(node: Node) -> bool:
 
 def do_xor(node: Node) -> bool:
     """Evaluate the value of an XOR expression."""
-    left = visit_tree(node.children[0])
-    right = visit_tree(node.children[1])
-    return (left or right) and (not (left and right))
+    children = [visit_tree(child) for child in node.children]
+    return any(children) and not all(children)
 
 
 def run_code(line: str) -> str:
@@ -217,15 +220,15 @@ def run_code(line: str) -> str:
         message.
     """
     try:
-        return str(visit_tree(build_ast(tokenize(line))))
+        return str(visit_tree(build_ast(tokenize(line, MASTER_REGEX))))
     except (NameError, SyntaxError) as error:
         return error.args[0]
     except KeyError as error:
-        return 'Undefined name "%s".' % error.args[0]
+        return 'Error: Undefined name "%s".' % error.args[0]
     except IndexError:
-        return "Invalid syntax."
+        return "Error: Invalid syntax."
     except ValueError:
-        return "Error: Unmatched bracket in expression."
+        return "Error: Unmatched bracket in the above expression."
 
 
 def setup_cli() -> ArgumentParser:
@@ -242,7 +245,7 @@ def setup_cli() -> ArgumentParser:
         "-e",
         "--expr",
         default="",
-        help="Print the result of the provided expression and exit.",
+        help="Print the result of EXPR and exit.",
     )
     return parser
 
