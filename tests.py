@@ -43,7 +43,7 @@ import caesium
 )
 @pytest.mark.tokenizer
 def test_tokenize(source: str, tokens: Tuple[caesium.Token, ...]) -> None:
-    stream = tuple(caesium.tokenize(source))
+    stream = tuple(caesium.tokenize(source, caesium.MASTER_REGEX))
     assert stream == tokens
 
 
@@ -51,7 +51,7 @@ def test_tokenize(source: str, tokens: Tuple[caesium.Token, ...]) -> None:
 @pytest.mark.parametrize("text", ("1 `OR` 0", "1 - 0", "~1/", "+1"))
 def test_tokenize_raises_syntaxerror_on_invalid_char(text: str) -> None:
     with pytest.raises(SyntaxError):
-        tuple(caesium.tokenize(text))
+        tuple(caesium.tokenize(text, caesium.MASTER_REGEX))
 
 
 @pytest.mark.visitor
@@ -179,4 +179,4 @@ def test_invalid_cli_flags(flags: List[str]) -> None:
 
 
 if __name__ == "__main__":
-    pytest.main(["-ra"])
+    pytest.main(["-m", "tokenizer"])

@@ -10,3 +10,4 @@ venv/
 .pylintrc
 .python-version
 pytest.ini
+pyproject.toml

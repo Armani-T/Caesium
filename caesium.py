@@ -115,16 +115,16 @@ def visit_tree(ast: Node) -> bool:
         The expression's evaluated value.
     """
     return {
-        "NAME": get_name,
-        "EQUALS": set_name,
         "AND": do_and,
-        "OR": do_or,
-        "NOT": lambda node: not visit_tree(node.children[0]),
+        "EQUALS": do_equals,
+        "LPAREN": lambda node: visit_tree(node.children[0]),
+        "NAME": get_name,
         "NAND": lambda node: not do_and(node),
         "NOR": lambda node: not do_or(node),
-        "XOR": do_xor,
+        "NOT": lambda node: not visit_tree(node.children[0]),
         "ROOT": lambda node: visit_tree(node.children[0]),
-        "LPAREN": lambda node: visit_tree(node.children[0]),
+        "OR": do_or,
+        "XOR": do_xor,
     }[ast.token.type](ast)
 
 
@@ -147,10 +147,11 @@ def get_name(node: Node) -> bool:
         sys_exit(0)
     if name == "random":
         return choice((True, False))
+    # TODO: Find a way of removing these references to the global scope.
     return RUNTIME_VARS[name]
 
 
-def set_name(node: Node) -> bool:
+def do_equals(node: Node) -> bool:
     """
     Evaluate and carry out an assignment expression.
 
@@ -164,7 +165,7 @@ def set_name(node: Node) -> bool:
     bool
         The expression's evaluated value.
     """
-    KEYWORDS = (
+    keywords = (
         "true",
         "false",
         "and",
@@ -181,21 +182,22 @@ def set_name(node: Node) -> bool:
     var_name = node.children[0].token.value.lower()
     var_value = visit_tree(node.children[1])
 
-    if var_name in KEYWORDS:
-        raise NameError('Name "%s" is reserved.' % var_name)
+    if var_name in keywords:
+        raise NameError('Error: Name "%s" is reserved.' % var_name)
 
+    # TODO: Find a way of doing this without mutating the global scope.
     RUNTIME_VARS[var_name] = var_value
     return var_value
 
 
 def do_and(node: Node) -> bool:
     """Evaluate the value of an AND expression."""
-    return visit_tree(node.children[0]) and visit_tree(node.children[1])
+    return all((visit_tree(child) for child in node.children))
 
 
 def do_or(node: Node) -> bool:
     """Evaluate the value of an OR expression."""
-    return visit_tree(node.children[0]) or visit_tree(node.children[1])
+    return any((visit_tree(child) for child in node.children))
 
 
 def do_xor(node: Node) -> bool:
@@ -206,7 +208,7 @@ def do_xor(node: Node) -> bool:
 
 def run_code(line: str) -> str:
     """
-    Run and return `line`'s string value.
+    Run and return line's string value.
 
     Parameters
     ----------
@@ -220,15 +222,12 @@ def run_code(line: str) -> str:
         message.
     """
     try:
-        return str(visit_tree(build_ast(tokenize(line, MASTER_REGEX))))
+        ast = build_ast(tokenize(line, MASTER_REGEX))
+        return str(visit_tree(ast))
     except (NameError, SyntaxError) as error:
         return error.args[0]
     except KeyError as error:
         return 'Error: Undefined name "%s".' % error.args[0]
-    except IndexError:
-        return "Error: Invalid syntax."
-    except ValueError:
-        return "Error: Unmatched bracket in the above expression."
 
 
 def setup_cli() -> ArgumentParser:
@@ -245,7 +244,7 @@ def setup_cli() -> ArgumentParser:
         "-e",
         "--expr",
         default="",
-        help="Print the result of EXPR and exit.",
+        help="Print the result of %(dest)s and exit.",
     )
     return parser
 
@@ -266,8 +265,9 @@ def main() -> int:
         while True:
             try:
                 print(run_code(input("%s " % PROMPT)))
-            except KeyboardInterrupt as error:
-                raise SystemExit from error
+            except KeyboardInterrupt:
+                break
+
     return 0
 
 

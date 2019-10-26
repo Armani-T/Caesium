@@ -119,7 +119,7 @@ Expression | Result |
 
 ##### 2. `NOR`
 
-`NOR` also works like `OR`, but it returns the opposite of what `OR` would. You can mimic it by doing `!(<val_1> || <val_2>)`. It can also be written as `~`. `NOR` operations can be represented in a table as:
+`NOR`, or **Not OR**, also works like `OR`, but it returns the opposite of what `OR` would. It can also be written as `~`. `<val_1> ~ <val_2>` is just shorthand for `!(<val_1> || <val_2>)`. `NOR` operations can be represented in a table as:
 
 Expression | Result |
 |:---:|:---:|
@@ -130,7 +130,7 @@ Expression | Result |
 
 ##### 3. `NAND`
 
-`NAND` works exactly like `AND`, but it returns the opposite of what `AND` would. You can mimic it by doing `NOT (<val_1> AND <val_2>)`. It can also be written as `@`. NAND operations can be represented in a table as:
+`NAND`, or **Not AND**, works exactly like `AND`, but it returns the opposite of what `AND` would. It can also be written as `@`. `<val_1> NAND <val_2>` is just shorthand for `NOT (<val_1> AND <val_2>)`. `NAND` operations can be represented in a table as:
 
 Expression | Result |
 |:---:|:---:|
@@ -141,7 +141,7 @@ Expression | Result |
 
 ### Comments
 
-Comments are lines of text meant for other people to read, rather than for the interpreter to run. If a line begins with a `#` character, the entire line is treated by the interpreter as if it is empty.
+Comments are lines of text meant for other people to read, rather than for the interpreter to run. If a line begins with a `#` character, the entire line is treated by the interpreter as if it contains nothing.
 
 ### Errors
 
@@ -158,17 +158,14 @@ Invalid syntax: "/".
 
 ### Exiting
 
-Either pressing `Control + C` or typing in `exit` and hitting Enter will cause the interpreter to stop and take you back to the normal shell. Using either route, the interpreter should stop running almost instantly.
+Either pressing `Control + C` or typing in `exit` and hitting Enter will cause the interpreter to stop instantly and take you back to the normal shell.
 
 ```
 Cs> exit
 $
 ```
 
-## TODO
-
-- [x] Add a proper parse tree.
-- [ ] Put Caesium in PyPI.
+* * * * *
 
 ## Development Setup
 
@@ -184,14 +181,19 @@ $
 4. Push to `origin/develop`.
 5. Open a pull request.
 
+## TODO
+
+- [ ] Put Caesium in PyPI.
+
 ## Notes
 
-Just lke the element Caesium, this app may also break down. In case it does, don't heitate to contact me (though I might be a bit slow) or patch it yourself if you so wish.
+Just like the element Caesium, this app may also break down. In case it does, don't heitate to contact me (though I might be a bit slow) or patch it yourself if you so wish.
 
 ## Meta
 
 - Name: **Armani Tallam**
-- E-Mail: <armanitallam@gmail.com>
+- E-Mail: armanitallam@gmail.com
 - GitHub: <https://www.github.com/Armani-T>
 
-This project is licensed under the **BSD License**. See the [license text](./LICENSE.txt) for more information.
+This project is licensed under the **BSD License**. Please see the [license file](./LICENSE.txt) 
+for more information.
