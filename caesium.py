@@ -3,38 +3,41 @@ from argparse import ArgumentParser
 from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
-from sys import platform, stdin, stdout
-from typing import Generator, Iterable, Sequence
+from sys import platform, exit as sys_exit
+from typing import Generator, Iterable, Pattern
 
-PROGRAM_NAME, VERSION = "caesium", "v0.3.2"
-KEYWORDS = ("true", "false", "and", "or", "not", "xor", "exit", "random")
-PROMPT = "\n>> "
-REGEX_TOKENS = "|".join(
-    (
-        r"(?P<NOT>\bnot\b|\!)",
-        r"(?P<OR>\bor\b|\|\||\|)",
-        r"(?P<AND>\band\b|\&\&|\&)",
-        r"(?P<XOR>\bxor\b|\^)",
-        r"(?P<NAME>\b\w+\b)",
-        r"(?P<EQUALS>\=)",
-        r"(?P<LPAREN>\()",
-        r"(?P<RPAREN>\))",
-        r"(?P<WHITESPACE>\s+)",
-        r"(?P<COMMENT>#(.)*?\n)",
-        r"(?P<INVALID_CHAR>.)",
-    )
+__author__ = "Armani Tallam"
+__program__ = "caesium"
+__version__ = "0.5.1"
+
+PROMPT = "Cs>"
+MASTER_REGEX = re_compile(
+    "|".join(
+        (
+            r"(?P<NOT>\bnot\b|!)",
+            r"(?P<OR>\bor\b|\|\||\|)",
+            r"(?P<AND>\band\b|&&|&)",
+            r"(?P<XOR>\bxor\b|\^)",
+            r"(?P<NAND>\bnand\b|@)",
+            r"(?P<NOR>\bnor\b|~)",
+            r"(?P<EQUALS>=)",
+            r"(?P<NAME>\b\w+\b)",
+            r"(?P<LPAREN>\()",
+            r"(?P<RPAREN>\))",
+            r"(?P<WHITESPACE>\s+)",
+            r"(?P<COMMENT>#.*$)",
+            r"(?P<INVALID_CHAR>.)",
+        )
+    ),
+    IGNORECASE,
 )
-MASTER_REGEX = re_compile(REGEX_TOKENS, IGNORECASE)
 
-Token = namedtuple("Token", ("type", "text"))
-runtime_vars = {}
-
-is_keyword = lambda name: name.lower() in KEYWORDS
-get_name = lambda name: runtime_vars[name.lower()]
-store_name = lambda name, value: runtime_vars.update({name.lower(): value})
+Token = namedtuple("Token", ("type", "value"))
+Node = namedtuple("Node", ("token", "children"))
+RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
 
 
-def tokenize(text: str) -> Generator[Token, None, None]:
+def tokenize(text: str, regex: Pattern[str]) -> Generator[Token, None, None]:
     """
     Convert the source code into a stream of tokens.
 
@@ -43,219 +46,230 @@ def tokenize(text: str) -> Generator[Token, None, None]:
     text
         The source code to tokenize.
     regex
-        A compiled regex used to make the text scanner.
+        A combination of all the language tokens. It will be used to
+        generate tokens.
 
     Yields
     ------
     Token
         A namedtuple with only 2 attributes: `type` and `text`.
     """
-    scanner = MASTER_REGEX.scanner(text)
+    scanner = regex.scanner(text)
     for match in iter(scanner.match, None):
         if match.lastgroup == "INVALID_CHAR":
-            raise SyntaxError('Invalid syntax: "%s".' % match.group())
+            raise SyntaxError('Error: Invalid syntax: "%s".' % match.group())
         if match.lastgroup not in ("COMMENT", "WHITESPACE"):
             yield Token(match.lastgroup, match.group())
 
 
-def parse_expr(expr: Iterable[Token]) -> bool:
+def build_ast(tokens: Iterable[Token]) -> Node:
     """
-    Evaluate a single expression consisting of tokens.
+    Convert the token stream into an AST for parsing.
 
     Parameters
     ----------
-    expr
-        A sequence of tokens representing a single expression.
-    Returns
-    -------
-    bool
-        The full expression's evaluated value or None if the expression
-        is empty.
-    """
-    tokens = tuple(expr)
-    if not tokens:
-        raise SyntaxError("Empty expression.")
-    if len(tokens) == 1:
-        return parse_name(tokens[0].text)
-    return parse_operation(tokens)
-
-
-def parse_name(name: str) -> bool:
-    """
-    Evaluate the value of `name`.
-
-    Parameters
-    ----------
-    name
-        The name to be evaluated.
+    tokens
+        A stream of tokens from the tokener.
 
     Returns
     -------
-    bool
-        The name's evaluated value.
+    Node
+        The root node of the code's AST.
     """
+    parents = [Node(Token("ROOT", ""), [])]
+    # The root node is always the first parent.
 
-    def stop():
-        import sys
+    for token in tokens:
+        parent_node = parents[-1]
+        current_node = Node(token, [])
 
-        stdout.write("Exiting...\n")
-        sys.exit(0)
+        if token.type in ("AND", "OR", "XOR", "NAND", "NOR", "EQUALS"):
+            current_node.children.append(parent_node.children.pop())
+            parent_node.children.append(current_node)
+            parents.append(current_node)
+        elif token.type in ("NOT", "LPAREN"):
+            parent_node.children.append(current_node)
+            parents.append(current_node)
+        elif token.type == "RPAREN":
+            parent = parents.pop()
+            while parent.token.type != "LPAREN":
+                parent = parents.pop()
+        else:
+            parent_node.children.append(current_node)
 
-    name = name.lower()
-    return {
-        "true": lambda _: True,
-        "1": lambda _: True,
-        "false": lambda _: False,
-        "0": lambda _: False,
-        "exit": lambda _: stop(),
-        "random": lambda _: choice((True, False)),
-    }.get(name, get_name)(name)
+    return parents[0]
 
 
-def parse_operation(expr: Sequence[Token]) -> bool:
+def visit_tree(ast: Node) -> bool:
     """
     Evaluate part of or the whole of an expression.
 
     Parameters
     ----------
-    expr
-        The sequence of tokens representing a single expression.
+    ast
+        A root node and its children which represent an expression.
+
     Returns
     -------
     bool
         The expression's evaluated value.
     """
-    if expr[0].type == "LPAREN":
-        return do_parens(expr)
-
-    if expr[0].type == "NOT":
-        return not parse_expr(expr[1:])
-
-    if expr[1].type == "EQUALS":
-        return do_assignment(expr)
-
-    if expr[1].type == "AND":
-        return do_and(expr)
-
-    if expr[1].type == "OR":
-        return do_or(expr)
-
-    if expr[1].type == "XOR":
-        return do_xor(expr)
-
-    line = " ".join((token.text for token in expr))
-    raise SyntaxError('Invalid syntax: "%s".' % line)
+    return {
+        "AND": do_and,
+        "EQUALS": do_equals,
+        "LPAREN": lambda node: visit_tree(node.children[0]),
+        "NAME": get_name,
+        "NAND": lambda node: not do_and(node),
+        "NOR": lambda node: not do_or(node),
+        "NOT": lambda node: not visit_tree(node.children[0]),
+        "ROOT": lambda node: visit_tree(node.children[0]),
+        "OR": do_or,
+        "XOR": do_xor,
+    }[ast.token.type](ast)
 
 
-def do_assignment(expr: Sequence[Token]) -> bool:
+def get_name(node: Node) -> bool:
+    """
+    Evaluate the value of a NAME node.
+
+    Parameters
+    ----------
+    node
+        The node to be evaluated.
+
+    Returns
+    -------
+    bool
+        The node's evaluated value.
+    """
+    name = node.token.value.lower()
+    if name == "exit":
+        sys_exit(0)
+    if name == "random":
+        return choice((True, False))
+    # TODO: Find a way of removing these references to the global scope.
+    return RUNTIME_VARS[name]
+
+
+def do_equals(node: Node) -> bool:
     """
     Evaluate and carry out an assignment expression.
 
     Parameters
     ----------
-    expr
-        The sequence of tokens representing a single expression.
+    node
+        The ast representing a single expression.
 
     Returns
     -------
     bool
         The expression's evaluated value.
     """
-    var_name = expr[0].text
-    var_value = parse_expr(expr[2:])
+    keywords = (
+        "true",
+        "false",
+        "and",
+        "or",
+        "not",
+        "xor",
+        "nand",
+        "nor",
+        "exit",
+        "random",
+        "1",
+        "0",
+    )
+    var_name = node.children[0].token.value.lower()
+    var_value = visit_tree(node.children[1])
 
-    if is_keyword(var_name):
-        raise NameError('Name "%s" is reserved.' % var_name)
+    if var_name in keywords:
+        raise NameError('Error: Name "%s" is reserved.' % var_name)
 
-    store_name(var_name, var_value)
+    # TODO: Find a way of doing this without mutating the global scope.
+    RUNTIME_VARS[var_name] = var_value
     return var_value
 
 
-def do_parens(expr: Sequence[Token]) -> bool:
-    """Evaluate the expression inside a pair of parentheses."""
-    skips = expr.count(Token("LPAREN", "(")) - 1
-    rparen_index = expr.index(Token("RPAREN", ")"))
-    while skips > 0:
-        lparen_index = expr.index(Token("LPAREN", "("))
-        expr_ = expr[lparen_index:]
-        rparen_index = expr_.index(("RPAREN", ")")) + 1
-        skips -= 1
-
-    return parse_expr(expr[1:rparen_index])
-
-
-def do_and(expr: Sequence[Token]) -> bool:
+def do_and(node: Node) -> bool:
     """Evaluate the value of an AND expression."""
-    return parse_name(expr[0].text) and parse_expr(expr[2:])
+    return all((visit_tree(child) for child in node.children))
 
 
-def do_or(expr: Sequence[Token]) -> bool:
+def do_or(node: Node) -> bool:
     """Evaluate the value of an OR expression."""
-    return parse_name(expr[0].text) or parse_expr(expr[2:])
+    return any((visit_tree(child) for child in node.children))
 
 
-def do_xor(expr: Sequence[Token]) -> bool:
+def do_xor(node: Node) -> bool:
     """Evaluate the value of an XOR expression."""
-    left = parse_name(expr[0].text)
-    right = parse_expr(expr[2:])
-    return (left or right) and (not (left and right))
+    children = [visit_tree(child) for child in node.children]
+    return any(children) and not all(children)
 
 
-def run_prompt(line: str) -> str:
-    """Get code from the prompt, run then return it."""
+def run_code(line: str) -> str:
+    """
+    Run and return line's string value.
+
+    Parameters
+    ----------
+    line
+        The line of code to be run.
+
+    Returns
+    -------
+    str
+        Either the string value of the evaluated line or an error
+        message.
+    """
     try:
-        tokens = tokenize(line)
-        return str(parse_expr(tokens)) or ""
-
-    except (SyntaxError, NameError) as error:
+        ast = build_ast(tokenize(line, MASTER_REGEX))
+        return str(visit_tree(ast))
+    except (NameError, SyntaxError) as error:
         return error.args[0]
     except KeyError as error:
-        return 'Undefined name "%s".' % error.args[0]
-    except ValueError:
-        return "Unmatched bracket in expression."
+        return 'Error: Undefined name "%s".' % error.args[0]
 
 
-def main() -> None:
-    """Start and manage the language's REPL."""
-    stdout.write(
-        "%s %s running on %s.\nPress Ctrl+C to exit."
-        % (PROGRAM_NAME, VERSION, platform)
-    )
-    running = True
-    while running:
-        try:
-            stdout.write(PROMPT)
-            line = stdin.readline()
-            if line:
-                expr_value = run_prompt(line)
-                stdout.write(expr_value)
-
-        except KeyboardInterrupt:
-            stdout.write("\nExiting...\n")
-            running = False
-
-
-if __name__ == "__main__":
-    parser = ArgumentParser(prog=PROGRAM_NAME)
-    parser.add_argument(
+def setup_cli() -> ArgumentParser:
+    """Set up and define the parser and command line flags for the app."""
+    parser = ArgumentParser(prog=__program__)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-v",
         "--version",
         action="store_true",
         help="Print %(prog)s's version number.",
     )
-    parser.add_argument(
+    group.add_argument(
         "-e",
         "--expr",
         default="",
-        help="Run the provided expression, print the result and exit.",
+        help="Print the result of %(dest)s and exit.",
     )
-    args = parser.parse_args()
+    return parser
 
+
+def main() -> int:
+    """Parse the command line args and run the app accordingly."""
+    parser = setup_cli()
+    args = parser.parse_args()
     if args.version:
-        stdout.write("%s %s\n" % (PROGRAM_NAME, VERSION))
+        print("%s v%s" % (__program__, __version__))
     elif args.expr:
-        parsed_value = parse_expr(tokenize(args.expr))
-        stdout.write(str(parsed_value))
-        stdout.write("\n")
+        print(run_code(args.expr))
     else:
-        main()
+        print(
+            '%s v%s running on %s.\nPress Ctrl+C or enter "exit" to exit.'
+            % (__program__, __version__, platform)
+        )
+        while True:
+            try:
+                print(run_code(input("%s " % PROMPT)))
+            except KeyboardInterrupt:
+                break
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys_exit(main())

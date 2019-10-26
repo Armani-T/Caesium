@@ -1,180 +1,182 @@
-from pytest import mark, fixture
+from typing import List, Tuple
+
+import pytest
 
 import caesium
 
 
-@fixture(autouse=True)
-def patch_runtime_vars(monkeypatch):
-    new_vars = {
-        "a_var": True,
-        "another_var": True,
-        "quux": False,
-        "foobar": False,
-    }
-    monkeypatch.setattr(caesium, "runtime_vars", new_vars)
-
-
-@mark.parametrize(
-    "name,expected",
-    (
-        ("TRUE", True),
-        ("false", True),
-        ("not", True),
-        ("quux", False),
-        ("foobar", False),
-        ("x", False),
-    ),
-)
-def test_is_keyword(name: str, expected: bool):
-    assert caesium.is_keyword(name) is expected
-
-
-@mark.parametrize(
-    "name,expected",
-    (
-        ("a_var", True),
-        ("another_var", True),
-        ("foobar", False),
-        ("quux", False),
-    ),
-)
-def test_get_name(name: str, expected: bool):
-    assert caesium.get_name(name) is expected
-
-
-@mark.parametrize(
-    "name,value",
-    (
-        ("some_var", True),
-        ("abracadabra", True),
-        ("epsilon", False),
-        ("quux", False),
-    ),
-)
-def test_store_name(name: str, value: bool):
-    caesium.store_name(name, value)
-    assert name in caesium.runtime_vars
-    assert caesium.get_name(name) is value
-
-
-@mark.parametrize(
+@pytest.mark.tokenizer
+@pytest.mark.parametrize(
     "source,tokens",
     (
         (
-            "a = b",
-            (
-                caesium.Token("NAME", "a"),
-                caesium.Token("EQUALS", "="),
-                caesium.Token("NAME", "b"),
-            ),
-        ),
-        (
-            "E_VAR = e_var = TRUE",
+            "E_VAR = Elephant = TRUE",
             (
                 caesium.Token("NAME", "E_VAR"),
                 caesium.Token("EQUALS", "="),
-                caesium.Token("NAME", "e_var"),
+                caesium.Token("NAME", "Elephant"),
                 caesium.Token("EQUALS", "="),
                 caesium.Token("NAME", "TRUE"),
             ),
         ),
         (
-            "false^b",
-            (
-                caesium.Token("NAME", "false"),
-                caesium.Token("XOR", "^"),
-                caesium.Token("NAME", "b"),
-            ),
-        ),
-        (
-            "a | b",
+            "a | b & c",
             (
                 caesium.Token("NAME", "a"),
                 caesium.Token("OR", "|"),
                 caesium.Token("NAME", "b"),
+                caesium.Token("AND", "&"),
+                caesium.Token("NAME", "c"),
             ),
         ),
         (
-            "a & b",
+            "!(quux)",
             (
-                caesium.Token("NAME", "a"),
-                caesium.Token("AND", "&"),
-                caesium.Token("NAME", "b"),
+                caesium.Token("NOT", "!"),
+                caesium.Token("LPAREN", "("),
+                caesium.Token("NAME", "quux"),
+                caesium.Token("RPAREN", ")"),
             ),
         ),
-        ("!a", (caesium.Token("NOT", "!"), caesium.Token("NAME", "a"))),
         ("false", (caesium.Token("NAME", "false"),)),
     ),
 )
-def test_tokenize(source: str, tokens: tuple):
-    stream = tuple(caesium.tokenize(source))
+@pytest.mark.tokenizer
+def test_tokenize(source: str, tokens: Tuple[caesium.Token, ...]) -> None:
+    stream = tuple(caesium.tokenize(source, caesium.MASTER_REGEX))
     assert stream == tokens
 
 
-@mark.parametrize(
-    "line",
+@pytest.mark.tokenizer
+@pytest.mark.parametrize("text", ("1 `OR` 0", "1 - 0", "~1/", "+1"))
+def test_tokenize_raises_syntaxerror_on_invalid_char(text: str) -> None:
+    with pytest.raises(SyntaxError):
+        tuple(caesium.tokenize(text, caesium.MASTER_REGEX))
+
+
+@pytest.mark.visitor
+@pytest.mark.parametrize(
+    "tree,expected",
     (
-        "E_VAR = e_var = TRUE",
-        "true",
-        "!(a_var)",
-        "quux = (foo = True) ^ (bar = False)",
+        (
+            caesium.Node(
+                caesium.Token("OR", "||"),
+                [
+                    caesium.Node(caesium.Token("NAME", "false"), []),
+                    caesium.Node(caesium.Token("NAME", "1"), []),
+                ],
+            ),
+            True,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("OR", "|"),
+                [
+                    caesium.Node(caesium.Token("NAME", "0"), []),
+                    caesium.Node(
+                        caesium.Token("LPAREN", "("),
+                        [caesium.Node(caesium.Token("NAME", "false"), [])],
+                    ),
+                ],
+            ),
+            False,
+        ),
     ),
 )
-def test_parse_expr(line: str):
-    tokens = tuple(caesium.tokenize(line))
-    assert caesium.parse_expr(tokens)
+def test_do_or(tree: caesium.Node, expected: bool) -> None:
+    assert caesium.do_or(tree) is expected
 
 
-@mark.parametrize(
-    "expr,expected",
+@pytest.mark.visitor
+@pytest.mark.parametrize(
+    "tree,expected",
     (
-        ("_a = !false", True),
-        ("some_var = some_other_var = False", False),
-        ("!(a_var&(a_var|foobar))", False),
-        ("another_var | a_var", True),
-        ("foobar ^ quux", False),
+        (
+            caesium.Node(
+                caesium.Token("AND", "AND"),
+                [
+                    caesium.Node(caesium.Token("NAME", "false"), []),
+                    caesium.Node(caesium.Token("NAME", "1"), []),
+                ],
+            ),
+            False,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("AND", "&&"),
+                [
+                    caesium.Node(caesium.Token("NAME", "true"), []),
+                    caesium.Node(
+                        caesium.Token("EQUALS", "="),
+                        [
+                            caesium.Node(caesium.Token("NAME", "x"), []),
+                            caesium.Node(caesium.Token("NAME", "TRUE"), []),
+                        ],
+                    ),
+                ],
+            ),
+            True,
+        ),
     ),
 )
-def test_parse_operation(expr: str, expected: bool):
-    stream = tuple(caesium.tokenize(expr))
-    return_value: bool = caesium.parse_operation(stream)
-    assert return_value is expected
+def test_do_and(tree: caesium.Node, expected: bool) -> None:
+    assert caesium.do_and(tree) is expected
 
 
-@mark.parametrize(
-    "expr,expected",
+@pytest.mark.visitor
+@pytest.mark.parametrize(
+    "tree,expected",
     (
-        ("a_var=True", True),
-        ("b_var = False", False),
-        ("_ = true", True),
-        ("d_var = false", False),
-        ("E_VAR = e_var = TRUE", True),
-        ("F_VAR = f_var = FALSE", False),
+        (
+            caesium.Node(
+                caesium.Token("XOR", "^"),
+                [
+                    caesium.Node(caesium.Token("NAME", "TRUE"), []),
+                    caesium.Node(caesium.Token("NAME", "true"), []),
+                ],
+            ),
+            False,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("XOR", "XOR"),
+                [
+                    caesium.Node(caesium.Token("NAME", "true"), []),
+                    caesium.Node(
+                        caesium.Token("AND", "AND"),
+                        [
+                            caesium.Node(caesium.Token("NAME", "1"), []),
+                            caesium.Node(caesium.Token("NAME", "false"), []),
+                        ],
+                    ),
+                ],
+            ),
+            True,
+        ),
     ),
 )
-def test_do_assignment(expr: str, expected: bool) -> None:
-    tokens = tuple(caesium.tokenize(expr))
-    result = caesium.do_assignment(tokens)
-    assert result is caesium.get_name(tokens[0].text)
-    assert caesium.get_name(tokens[0].text) is expected
+def test_do_xor(tree: caesium.Node, expected: bool) -> None:
+    assert caesium.do_xor(tree) is expected
 
 
-@mark.parametrize(
-    "name,expected",
-    (
-        ("true", True),
-        ("True", True),
-        ("tRUe", True),
-        ("TRUE", True),
-        ("false", False),
-        ("False", False),
-        ("FalSE", False),
-        ("FALSE", False),
-        ("a_var", True),
-        ("another_var", True),
-        ("foobar", False),
-        ("quux", False),
-    ),
+@pytest.mark.cli
+@pytest.mark.parametrize(
+    "flags,attr_name",
+    ((["-v"], "version"), (["--expr", "true ^ false | 0 & 1"], "expr")),
 )
-def test_parse_name(name: str, expected: bool) -> None:
-    assert caesium.parse_name(name) is expected
+def test_valid_cli_flags(flags: List[str], attr_name: str) -> None:
+    arg_parser = caesium.setup_cli()
+    args = arg_parser.parse_args(flags)
+    assert getattr(args, attr_name)
+
+
+@pytest.mark.cli
+@pytest.mark.parametrize("flags", (["-a"], ["--wrong"], ["--expr"]))
+def test_invalid_cli_flags(flags: List[str]) -> None:
+    with pytest.raises(SystemExit):
+        parser = caesium.setup_cli()
+        parser.parse_args(flags)
+
+
+if __name__ == "__main__":
+    pytest.main(["-m", "tokenizer"])
