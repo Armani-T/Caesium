@@ -1,4 +1,7 @@
-# Caesium README
+# Caesium
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 
 Caesium is a simple language built to evaluate Boolean algebra.
 
@@ -7,7 +10,7 @@ Caesium is a simple language built to evaluate Boolean algebra.
 1. Ensure that you have a working version of python3 (If you don't, you can get it from the [official site](https://www.python.org/)). Any python version ≥ 3.4.3 should work.
 2. Clone the repo using `git clone` or download it as a zip file and unzip it anywhere in your file system.
 3. Navigate to the project's root folder and run `pip install -r requirements.txt` to install the dependencies.
-4. Add the `./caesium.py` file to your `PATH` (**This step is optional**).
+4. Add the `./caesium.py` file to your `PATH` (**This step is completely optional**).
 
 ## Usage
 
@@ -176,7 +179,6 @@ $
 ## Contributing
 
 1. Crete your feature branch by forking the `develop` branch.
-2. Run `black` on all the code in the repo.
 3. Commit your changes.
 4. Push to `origin/develop`.
 5. Open a pull request.
@@ -187,13 +189,13 @@ $
 
 ## Notes
 
-Just like the element Caesium, this app may also break down. In case it does, don't heitate to contact me (though I might be a bit slow) or patch it yourself if you so wish.
+Just like the element Caesium, this app may also break down. In case it does, don't heitate to contact me (though I may be slow) or submit a pull request if you so wish.
 
 ## Meta
 
 - Name: **Armani Tallam**
 - E-Mail: armanitallam@gmail.com
-- GitHub: <https://www.github.com/Armani-T>
+- GitHub: <https://www.github.com/Armani-T> (You are literally on it.)
 
 This project is licensed under the **BSD License**. Please see the [license file](./LICENSE.txt) 
 for more information.
