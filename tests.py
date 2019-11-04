@@ -179,4 +179,4 @@ def test_invalid_cli_flags(flags: List[str]) -> None:
 
 
 if __name__ == "__main__":
-    pytest.main(["-m", "tokenizer"])
+    pytest.main(["-ra",])
