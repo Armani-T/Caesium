@@ -8,7 +8,7 @@ from typing import Generator, Iterable, Pattern
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "0.5.1"
+__version__ = "1.0.0"
 
 PROMPT = "Cs>"
 MASTER_REGEX = re_compile(

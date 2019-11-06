@@ -176,7 +176,3 @@ def test_invalid_cli_flags(flags: List[str]) -> None:
     with pytest.raises(SystemExit):
         parser = caesium.setup_cli()
         parser.parse_args(flags)
-
-
-if __name__ == "__main__":
-    pytest.main(["-ra",])
