@@ -1,9 +1,8 @@
 # Caesium
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Build Status](https://travis-ci.com/Armani-T/Caesium.svg?branch=master)](https://travis-ci.com/Armani-T/Caesium)
 
-
-Caesium is a simple language built to evaluate Boolean algebra.
+Caesium is a simple language built to help learn, understand and evauate Boolean algebraic expressions.
 
 ## Installation
 
@@ -26,7 +25,7 @@ Example:
 $ caesium
 caesium v0.5.1 running on win32.
 Press Ctrl+C or type "exit" to quit.
-Cs> 
+Cs>
 ```
 
 If you want to close the interpreter now, skip down [here](#Exiting) to learn how to.
@@ -197,5 +196,5 @@ Just like the element Caesium, this app may also break down. In case it does, do
 - E-Mail: armanitallam@gmail.com
 - GitHub: <https://www.github.com/Armani-T> (You are literally on it.)
 
-This project is licensed under the **BSD License**. Please see the [license file](./LICENSE.txt) 
+This project is licensed under the **BSD License**. Please see the [license file](./LICENSE.txt)
 for more information.
