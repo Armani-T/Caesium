@@ -2,49 +2,48 @@
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Build Status](https://travis-ci.com/Armani-T/Caesium.svg?branch=master)](https://travis-ci.com/Armani-T/Caesium)
 
-Caesium is a simple language built to help learn, understand and evauate Boolean algebraic expressions.
+Caesium is a simple language built to help myself (and others) learn about and understand how Boolean algebra works. To this end, it can evaluate some 
 
 ## Installation
 
-1. Ensure that you have a working version of python3 (If you don't, you can get it from the [official site](https://www.python.org/)). Any python version ≥ 3.4.3 should work.
-2. Clone the repo using `git clone` or download it as a zip file and unzip it anywhere in your file system.
-3. Navigate to the project's root folder and run `pip install -r requirements.txt` to install the dependencies.
-4. Add the `./caesium.py` file to your `PATH` (**This step is completely optional**).
+1. Ensure that you have a working version of python (You can get python3 from the [official site](https://www.python.org/downloads/) if you don't have it or want to upgrade). Any python version >= 3.4.0 should work.
+2. Install caesium using pip by running `pip install caesium-lang` from the command line.
+3. Test it out by running the command `caesium` in your command line.
 
 ## Usage
 
 ### Starting the Prompt
 
-You can start the prompt by running `caesium`. Please note that this route can only work if you follow Step 4 of the [Installation guide](#Installation).
-
-You can also start the prompt by navigating to the root directory of this project and running `python3 caesium.py`.
+You can start the prompt by running `caesium`.
 
 Example:
 
 ```
 $ caesium
-caesium v0.5.1 running on win32.
+caesium v1.1.0 running on win32.
 Press Ctrl+C or type "exit" to quit.
 Cs>
 ```
 
-If you want to close the interpreter now, skip down [here](#Exiting) to learn how to.
+If you want to close the interpreter now, skip down [here](#Exiting) to learn how to do that.
 
 ### Expressions
 
-An expression is any valid piece of code which returns a value. Expressions are evaluated right to left unless brackets (`()`) are used. If brackets are used, they are evaluated from the innermost to the outermost pair.
+An expression is any valid code which returns a value. In Caesium's case, that means that all valid code since all valid code must be an expression. Expressions are evaluated right to left unless brackets (`()`) are used.
 
-#### Values
+### Values
 
-There are only 2 built-in values: `True` and `False` (or `1` and `0` respectively). Caesium is case-insensitive they will work both in upper and lower case.
+There are only 2 built-in values: `True` (or `1`) and `False`  (or `0`). Caesium is case-insensitive so it will accept them in upper, lower and even mixed case.
 
-There is also the `random` keyword which randomly evaluates to either `True` or `False` every time it's used.
+There is also the `random` keyword which randomly evaluates to either `True` or `False` whenever it's used.
 
 ```
 Cs> TRUE
 True
 Cs> False
 False
+Cs> tRuE
+True
 Cs> 0
 True
 Cs> 1
@@ -53,9 +52,9 @@ Cs> random
 True
 ```
 
-#### Assignment
+### Assignment
 
-You can assign a name to a value by putting a valid identifier on the left,then a `=` and finally an expression. A valid identifier is any string of Unicode text that is not a keyword and that has no whitespace characters within. Assignments can be chained together or nested within an expression.
+You can assign a name to a value by putting a valid identifier on the left, then a `=` and any valid expression. A valid identifier is any string of Unicode text that is neither a keyword nor does it contain whitespace. Assignments can be chained together to define more than one variable at once. Since assignments are expressions, they can be nested within larger expressions.
 
 ```
 Cs> foo = True
@@ -64,26 +63,26 @@ Cs> quux = coco = (True ^ (bar = True)) & False
 False
 ```
 
-#### Operators
+### Operators
 
-In caesium (and Boolean algebra in general),there are 2 types of operators: *basic* and *derived* operators.
+In caesium (and Boolean algebra in general),there are 2 types of operators, *basic* operators and *derived* operators.
 
 #### Basic Operators
 
-Basic operators, together with the 2 Boolean values, are the building blocks of Boolean algebra. There are only 3 of these basic operators. They are:
+Basic operators, together with the 2 Boolean values, are the building blocks of Boolean algebra. There are only 3 basic operators:
 
 ##### 1. `NOT`
 
-`NOT` takes  one value and flips its value. `NOT` can also be written as `!`. `NOT` operations can be tabulated as:
+`NOT` takes  one value and flips its value. `NOT` can also be written as `!`. Its operations can be summarised as:
 
 Expression | Result |
 |:---:|:---:|
-`!True` | `False` |
-`!False` | `True` |
+`NOT True` | `False` |
+`NOT False` | `True` |
 
 ##### 2. `AND`
 
-`AND` takes 2 arguments and checks if both of them evaluate to `True`. If they both do, it returns `True`, otherwise it returns `False`. `AND` can also be written as `&` or `&&`. `AND`  operations can be tabulated as:
+`AND` takes 2 arguments and checks if both of them evaluate to `True`. If they both do, it returns `True`, otherwise it returns `False`. `AND` can also be written as `&` or `&&`. `AND`  operations can be summarised as:
 
 Expression | Result |
 |:---:|:---:|
@@ -95,33 +94,33 @@ Expression | Result |
 
 ##### 3. `OR`
 
-`OR` also takes 2 arguments and checks if both of them evaluate to `False`. If they both do, it returns `False`, otherwise it returns `True`. `OR` can also be written as `|` or `||`. `OR` operations can be tabulated as:
+`OR` also takes 2 arguments and checks if both of them evaluate to `False`. If they both do, it returns `False`, otherwise it returns `True`. `OR` can also be written as `|` or `||`. `OR` operations can be summarised as:
 
 Expression | Result |
 |:---:|:---:|
-`True || True` | `True` |
-`True || False` | `True` |
-`False || True` | `True` |
-`False || False` | `False` |
+`True OR True` | `True` |
+`True OR False` | `True` |
+`False OR True` | `True` |
+`False OR False` | `False` |
 
 #### Derived Operators
 
-Derived operators, as their name implies, are derived from basic operators. All of them can be rewritten using only the basic operators.
+Derived operators are called "derived" because they are derived from the basic operators (i.e: they can be re-written as basic operators). As programmers however, we are too lazy to write them out in full, so we made them as a kind of shorthand.
 
 ##### 1. `XOR`
 
-`XOR`, or **eXclusive OR**, works just like `OR`, but both values cannot be `True`. `XOR` can also be written as `^`. `XOR` operations can be represented in a table as:
+`XOR`, or **eXclusive OR**, works just like `OR`, but where both values cannot be `True`. `XOR` can also be written as `^`. `XOR` operations can be represented in a table as:
 
 Expression | Result |
 |:--------:|:------:|
-`True ^ True` | `False` |
-`True ^ False` | `True` |
-`False ^ True` | `True` |
-`False ^ False` | `False` |
+`True XOR True` | `False` |
+`True XOR False` | `True` |
+`False XOR True` | `True` |
+`False XOR False` | `False` |
 
 ##### 2. `NOR`
 
-`NOR`, or **Not OR**, also works like `OR`, but it returns the opposite of what `OR` would. It can also be written as `~`. `<val_1> ~ <val_2>` is just shorthand for `!(<val_1> || <val_2>)`. `NOR` operations can be represented in a table as:
+`NOR`, or **Not OR**, also works just like `OR`, but it negates what `OR` returns. It can also be written as `~`.NAND`NOR` operations can be represented in a table as:
 
 Expression | Result |
 |:---:|:---:|
@@ -132,18 +131,18 @@ Expression | Result |
 
 ##### 3. `NAND`
 
-`NAND`, or **Not AND**, works exactly like `AND`, but it returns the opposite of what `AND` would. It can also be written as `@`. `<val_1> NAND <val_2>` is just shorthand for `NOT (<val_1> AND <val_2>)`. `NAND` operations can be represented in a table as:
+`NAND`, or **Not AND**, works exactly like `AND`, but it negates what `AND` returns. It can also be written as `@`. `NAND` operations can be represented in a table as:
 
 Expression | Result |
 |:---:|:---:|
-`True @ True` | `False` |
-`True @ False` | `True` |
-`False @ True` | `True` |
-`False @ False` | `True` |
+`True NAND True` | `False` |
+`True NAND False` | `True` |
+`False NAND True` | `True` |
+`False NAND False` | `True` |
 
 ### Comments
 
-Comments are lines of text meant for other people to read, rather than for the interpreter to run. If a line begins with a `#` character, the entire line is treated by the interpreter as if it contains nothing.
+Comments are lines of text meant for other people to read, rather than for the interpreter to run. If a line begins with a `#` character, the entire line is treated by the interpreter as if it is blank.
 
 ### Errors
 
@@ -175,9 +174,8 @@ $
 
 ## Development Setup
 
-1. Create a virtualenv.
-2. Install the development packages by running `pip install -r requirements-dev.txt`.
-3. Assert everything is working by running  `pytest tests.py` from the project's root dir.
+1. Inside of a fresh virtualenv, install development packages by running `pip install -r requirements-dev.txt`.
+2. Assert everything is working by running  `pytest tests.py` from the project's root dir.
 
 ## Contributing
 
@@ -188,13 +186,13 @@ $
 
 ## Notes
 
-Just like the element Caesium, this app may break down. In case it does, please contact me or if you wish, you may fix it yourself and submit a pull request.
+Just like the element Caesium, this app may break down. In case it does, please contact me or if you want to, fix it yourself.
 
 ## Meta
 
 - Name: **Armani Tallam**
 - E-Mail: armanitallam@gmail.com
-- GitHub: <https://www.github.com/Armani-T> (You are literally on it.)
+- GitHub: <https://www.github.com/Armani-T>
 
 This project is licensed under the **BSD 3-Clause License**. Please see the [license file](./LICENSE.txt)
 for more information.
