@@ -169,6 +169,10 @@ $
 
 * * * * *
 
+## TODO
+
+- An internal help mechanism so that you don't have to keep referring to the README.
+
 ## Development Setup
 
 1. Create a virtualenv.
@@ -182,13 +186,9 @@ $
 4. Push to `origin/develop`.
 5. Open a pull request.
 
-## TODO
-
-- [ ] Put Caesium in PyPI.
-
 ## Notes
 
-Just like the element Caesium, this app may also break down. In case it does, don't heitate to contact me (though I may be slow) or submit a pull request if you so wish.
+Just like the element Caesium, this app may break down. In case it does, please contact me or if you wish, you may fix it yourself and submit a pull request.
 
 ## Meta
 
@@ -196,5 +196,5 @@ Just like the element Caesium, this app may also break down. In case it does, do
 - E-Mail: armanitallam@gmail.com
 - GitHub: <https://www.github.com/Armani-T> (You are literally on it.)
 
-This project is licensed under the **BSD License**. Please see the [license file](./LICENSE.txt)
+This project is licensed under the **BSD 3-Clause License**. Please see the [license file](./LICENSE.txt)
 for more information.
