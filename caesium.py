@@ -37,31 +37,6 @@ Node = namedtuple("Node", ("token", "children"))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
 
 
-def tokenize(text: str, regex: Pattern[str]) -> Generator[Token, None, None]:
-    """
-    Convert the source code into a stream of tokens.
-
-    Parameters
-    ----------
-    text
-        The source code to tokenize.
-    regex
-        A combination of all the language tokens. It will be used to
-        generate tokens.
-
-    Yields
-    ------
-    Token
-        A namedtuple with only 2 attributes: `type` and `text`.
-    """
-    scanner = regex.scanner(text)
-    for match in iter(scanner.match, None):
-        if match.lastgroup == "INVALID_CHAR":
-            raise SyntaxError('Error: Invalid syntax: "%s".' % match.group())
-        if match.lastgroup not in ("COMMENT", "WHITESPACE"):
-            yield Token(match.lastgroup, match.group())
-
-
 def build_ast(tokens: Iterable[Token]) -> Node:
     """
     Convert the token stream into an AST for parsing.
@@ -94,6 +69,8 @@ def build_ast(tokens: Iterable[Token]) -> Node:
             parent = parents.pop()
             while parent.token.type != "LPAREN":
                 parent = parents.pop()
+        elif token.type == "INVALID_CHAR":
+            raise SyntaxError('Error: Invalid syntax: "%s".' % token.value)
         else:
             parent_node.children.append(current_node)
 
@@ -206,7 +183,7 @@ def do_xor(node: Node) -> bool:
     return any(children) and not all(children)
 
 
-def run_code(line: str) -> str:
+def run_code(line: str, regex: Pattern[str] = MASTER_REGEX) -> str:
     """
     Run and return line's string value.
 
@@ -222,7 +199,15 @@ def run_code(line: str) -> str:
         message.
     """
     try:
-        ast = build_ast(tokenize(line, MASTER_REGEX))
+        scanner = MASTER_REGEX.scanner(line)
+        tokens = (
+            Token(match.lastgroup, match.group())
+            for match in iter(scanner.match, None)
+            if match.lastgroup not in ("COMMENT", "WHITESPACE")
+            # This line juststrips out comments and whitespace to
+            # reduce the amount of useless tokens in the stream.
+        )
+        ast = build_ast(tokens)
         return str(visit_tree(ast))
     except (NameError, SyntaxError) as error:
         return error.args[0]
@@ -251,8 +236,8 @@ def setup_cli() -> ArgumentParser:
 
 def main() -> int:
     """Parse the command line args and run the app accordingly."""
-    parser = setup_cli()
-    args = parser.parse_args()
+    args = setup_cli().parse_args()
+
     if args.version:
         print("%s v%s" % (__program__, __version__))
     elif args.expr:

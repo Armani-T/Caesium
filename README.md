@@ -4,7 +4,7 @@ Caesium is a simple language built to evaluate Boolean algebra.
 
 ## Installation
 
-1. Ensure that you have a working version of python3 (If you don't, you can get it from the [official site](https://www.python.org/)). Any python version ≥ 3.4.3 should work.
+1. Ensure that you have a working version of python3 (If you don't have one, you can get one from the [official site](https://www.python.org/downloads/)). Any python version ≥ 3.4.0 should work.
 2. Clone the repo using `git clone` or download it as a zip file and unzip it anywhere in your file system.
 3. Navigate to the project's root folder and run `pip install -r requirements.txt` to install the dependencies.
 4. Add the `./caesium.py` file to your `PATH` (**This step is optional**).
