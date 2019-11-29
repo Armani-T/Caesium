@@ -1,60 +1,11 @@
-from typing import List, Tuple
+from typing import List
 
 import pytest
 
 import caesium
 
 
-@pytest.mark.tokenizer
-@pytest.mark.parametrize(
-    "source,tokens",
-    (
-        (
-            "E_VAR = Elephant = TRUE",
-            (
-                caesium.Token("NAME", "E_VAR"),
-                caesium.Token("EQUALS", "="),
-                caesium.Token("NAME", "Elephant"),
-                caesium.Token("EQUALS", "="),
-                caesium.Token("NAME", "TRUE"),
-            ),
-        ),
-        (
-            "a | b & c",
-            (
-                caesium.Token("NAME", "a"),
-                caesium.Token("OR", "|"),
-                caesium.Token("NAME", "b"),
-                caesium.Token("AND", "&"),
-                caesium.Token("NAME", "c"),
-            ),
-        ),
-        (
-            "!(quux)",
-            (
-                caesium.Token("NOT", "!"),
-                caesium.Token("LPAREN", "("),
-                caesium.Token("NAME", "quux"),
-                caesium.Token("RPAREN", ")"),
-            ),
-        ),
-        ("false", (caesium.Token("NAME", "false"),)),
-    ),
-)
-@pytest.mark.tokenizer
-def test_tokenize(source: str, tokens: Tuple[caesium.Token, ...]) -> None:
-    stream = tuple(caesium.tokenize(source, caesium.MASTER_REGEX))
-    assert stream == tokens
-
-
-@pytest.mark.tokenizer
-@pytest.mark.parametrize("text", ("1 `OR` 0", "1 - 0", "~1/", "+1"))
-def test_tokenize_raises_syntaxerror_on_invalid_char(text: str) -> None:
-    with pytest.raises(SyntaxError):
-        tuple(caesium.tokenize(text, caesium.MASTER_REGEX))
-
-
-@pytest.mark.visitor
+@pytest.mark.parser
 @pytest.mark.parametrize(
     "tree,expected",
     (
@@ -87,7 +38,7 @@ def test_do_or(tree: caesium.Node, expected: bool) -> None:
     assert caesium.do_or(tree) is expected
 
 
-@pytest.mark.visitor
+@pytest.mark.parser
 @pytest.mark.parametrize(
     "tree,expected",
     (
@@ -123,7 +74,7 @@ def test_do_and(tree: caesium.Node, expected: bool) -> None:
     assert caesium.do_and(tree) is expected
 
 
-@pytest.mark.visitor
+@pytest.mark.parser
 @pytest.mark.parametrize(
     "tree,expected",
     (
@@ -178,5 +129,61 @@ def test_invalid_cli_flags(flags: List[str]) -> None:
         parser.parse_args(flags)
 
 
+@pytest.mark.ast
+@pytest.mark.parametrize(
+    "line,exprected_tree",
+    (
+        (
+            "tRuE",
+            caesium.Node(
+                caesium.Token("ROOT", ""),
+                [caesium.Node(caesium.Token("NAME", "tRuE"), [])],
+            ),
+        ),
+        (
+            "1 ^ 0",
+            caesium.Node(
+                caesium.Token("ROOT", ""),
+                [
+                    caesium.Node(
+                        caesium.Token("XOR", "^"),
+                        [
+                            caesium.Node(caesium.Token("NAME", "1"), []),
+                            caesium.Node(caesium.Token("NAME", "0"), []),
+                        ],
+                    )
+                ],
+            ),
+        ),
+        (
+            "a_var = 0",
+            caesium.Node(
+                caesium.Token("ROOT", ""),
+                [
+                    caesium.Node(
+                        caesium.Token("EQUALS", "="),
+                        [
+                            caesium.Node(caesium.Token("NAME", "a_var"), []),
+                            caesium.Node(caesium.Token("NAME", "0"), []),
+                        ],
+                    )
+                ],
+            ),
+        ),
+    ),
+)
+def test_build_ast(line: str, expected_tree: caesium.Node):
+    tokens = caesium.build_ast(
+        (
+            caesium.Token(match.lastgroup, match.group())
+            for match in iter(caesium.MASTER_REGEX.scanner(line).match, None)
+            if match.lastgroup not in ("COMMENT", "WHITESPACE")
+            # This line just strips out comments and whitespace to reduce the
+            # amount of useless tokens in the stream.
+        )
+    )
+    assert tokens == expected_tree
+
+
 if __name__ == "__main__":
-    pytest.main(["-m", "tokenizer"])
+    pytest.main()
