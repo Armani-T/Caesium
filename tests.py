@@ -110,6 +110,81 @@ def test_do_xor(tree: caesium.Node, expected: bool) -> None:
     assert caesium.do_xor(tree) is expected
 
 
+@pytest.mark.parser
+@pytest.mark.parametrize(
+    "tree,expected",
+    (
+        (
+            caesium.Node(
+                caesium.Token("ROOT", ""),
+                [caesium.Node(caesium.Token("NAME", "FalSE"), [])],
+            ),
+            False,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("AND", "&"),
+                [
+                    caesium.Node(caesium.Token("NAME", "1"), []),
+                    caesium.Node(caesium.Token("NAME", "FALSE"), []),
+                ],
+            ),
+            False,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("NOR", "~"),
+                [
+                    caesium.Node(
+                        caesium.Token("NOT", "NOT"),
+                        [caesium.Node(caesium.Token("NAME", "true"), [])],
+                    ),
+                    caesium.Node(caesium.Token("NAME", "1"), []),
+                ],
+            ),
+            False,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("XOR", "XOR"),
+                [
+                    caesium.Node(
+                        caesium.Token("LPAREN", "("),
+                        [caesium.Node(caesium.Token("NAME", "true"), [])],
+                    ),
+                    caesium.Node(caesium.Token("NAME", "1"), []),
+                ],
+            ),
+            False,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("LPAREN", "("),
+                [
+                    caesium.Node(
+                        caesium.Token("NOT", "NOT"),
+                        [caesium.Node(caesium.Token("NAME", "true"), [])],
+                    )
+                ],
+            ),
+            False,
+        ),
+        (
+            caesium.Node(
+                caesium.Token("EQUALS", "="),
+                [
+                    caesium.Node(caesium.Token("NAME", "foobar"), []),
+                    caesium.Node(caesium.Token("NAME", "true"), []),
+                ],
+            ),
+            True,
+        ),
+    ),
+)
+def test_visit_tree(tree: caesium.Node, expected: bool):
+    assert caesium.visit_tree(tree) is expected
+
+
 @pytest.mark.cli
 @pytest.mark.parametrize(
     "flags,attr_name",
@@ -131,7 +206,7 @@ def test_invalid_cli_flags(flags: List[str]) -> None:
 
 @pytest.mark.ast
 @pytest.mark.parametrize(
-    "line,exprected_tree",
+    "line,expected_tree",
     (
         (
             "tRuE",
