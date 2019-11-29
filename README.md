@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Build Status](https://travis-ci.com/Armani-T/Caesium.svg?branch=master)](https://travis-ci.com/Armani-T/Caesium)
 
-Caesium is a simple language built to help myself (and others) learn about and understand how Boolean algebra works. To this end, it can evaluate some 
+Caesium is a simple language built to help myself (and others) learn about and understand how Boolean algebra works.
 
 ## Installation
 
@@ -20,7 +20,7 @@ Example:
 
 ```
 $ caesium
-caesium v1.1.0 running on win32.
+caesium v1.2.0 running on win32.
 Press Ctrl+C or type "exit" to quit.
 Cs>
 ```

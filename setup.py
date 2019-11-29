@@ -18,7 +18,6 @@ setup(
         "Typing :: Typed",
     ],
     description="A simple way to evaluate Boolean Algebra.",
-    install_requires=["typing==3.7.4.1"],
     license="BSD License",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -26,5 +25,5 @@ setup(
     packages=find_packages(),
     scripts=["caesium"],
     url="https://github.com/Armani-T/Caesium",
-    version="1.1.0",
+    version="1.2.0",
 )
