@@ -4,11 +4,11 @@ from collections import namedtuple
 from re import IGNORECASE, compile as re_compile
 from random import choice
 from sys import platform, exit as sys_exit
-from typing import Generator, Iterable, Pattern
+from typing import Iterable
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 PROMPT = "Cs>"
 MASTER_REGEX = re_compile(
@@ -124,7 +124,6 @@ def get_name(node: Node) -> bool:
         sys_exit(0)
     if name == "random":
         return choice((True, False))
-    # TODO: Find a way of removing these references to the global scope.
     return RUNTIME_VARS[name]
 
 
@@ -162,7 +161,6 @@ def do_equals(node: Node) -> bool:
     if var_name in keywords:
         raise NameError('Error: Name "%s" is reserved.' % var_name)
 
-    # TODO: Find a way of doing this without mutating the global scope.
     RUNTIME_VARS[var_name] = var_value
     return var_value
 
@@ -183,7 +181,7 @@ def do_xor(node: Node) -> bool:
     return any(children) and not all(children)
 
 
-def run_code(line: str, regex: Pattern[str] = MASTER_REGEX) -> str:
+def run_code(line: str) -> str:
     """
     Run and return line's string value.
 
@@ -199,13 +197,12 @@ def run_code(line: str, regex: Pattern[str] = MASTER_REGEX) -> str:
         message.
     """
     try:
-        scanner = MASTER_REGEX.scanner(line)
         tokens = (
             Token(match.lastgroup, match.group())
-            for match in iter(scanner.match, None)
+            for match in iter(MASTER_REGEX.scanner(line).match, None)
             if match.lastgroup not in ("COMMENT", "WHITESPACE")
-            # This line juststrips out comments and whitespace to
-            # reduce the amount of useless tokens in the stream.
+            # This line just strips out comments and whitespace to reduce the
+            # amount of useless tokens in the stream.
         )
         ast = build_ast(tokens)
         return str(visit_tree(ast))
