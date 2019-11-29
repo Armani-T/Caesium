@@ -12,3 +12,7 @@ venv/
 .python-version
 pytest.ini
 pyproject.toml
+
+caesium_lang.egg-info/
+build/
+dist/

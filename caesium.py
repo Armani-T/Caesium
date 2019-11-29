@@ -8,7 +8,7 @@ from typing import Iterable
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "0.5.2"
+__version__ = "1.1.1"
 
 PROMPT = "Cs>"
 MASTER_REGEX = re_compile(
@@ -217,16 +217,10 @@ def setup_cli() -> ArgumentParser:
     parser = ArgumentParser(prog=__program__)
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "-v",
-        "--version",
-        action="store_true",
-        help="Print %(prog)s's version number.",
+        "-v", "--version", action="store_true", help="Print %(prog)s's version number."
     )
     group.add_argument(
-        "-e",
-        "--expr",
-        default="",
-        help="Print the result of %(dest)s and exit.",
+        "-e", "--expr", default="", help="Print the result of %(dest)s and exit."
     )
     return parser
 
@@ -251,7 +245,3 @@ def main() -> int:
                 break
 
     return 0
-
-
-if __name__ == "__main__":
-    sys_exit(main())
