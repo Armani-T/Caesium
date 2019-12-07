@@ -183,25 +183,6 @@ def test_visit_tree(tree, expected):
     assert caesium.visit_tree(tree) is expected
 
 
-@pytest.mark.cli
-@pytest.mark.parametrize(
-    "flags,attr_name",
-    ((["-v"], "version"), (["--expr", "true ^ false | 0 & 1"], "expr")),
-)
-def test_valid_cli_flags(flags, attr_name):
-    arg_parser = caesium.setup_cli()
-    args = arg_parser.parse_args(flags)
-    assert getattr(args, attr_name)
-
-
-@pytest.mark.cli
-@pytest.mark.parametrize("flags", (["-a"], ["--wrong"], ["--expr"]))
-def test_invalid_cli_flags(flags):
-    with pytest.raises(SystemExit):
-        parser = caesium.setup_cli()
-        parser.parse_args(flags)
-
-
 @pytest.mark.ast
 @pytest.mark.parametrize(
     "line,expected_tree",

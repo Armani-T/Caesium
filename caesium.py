@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-from argparse import ArgumentParser
 from collections import namedtuple
 from collections.abc import Iterable
 from re import IGNORECASE, compile as re_compile
 from random import choice
-from sys import platform, exit as sys_exit
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
-PROMPT = "Cs>"
 MASTER_REGEX = re_compile(
     "|".join(
         (
@@ -29,7 +26,7 @@ MASTER_REGEX = re_compile(
             r"(?P<INVALID_CHAR>.)",
         )
     ),
-    IGNORECASE,
+    IGNORECASE
 )
 
 Token = namedtuple("Token", ("type", "value"))
@@ -69,10 +66,10 @@ def build_ast(tokens: Iterable) -> Node:
             parent = parents.pop()
             while parent.token.type != "LPAREN":
                 parent = parents.pop()
-        elif token.type == "INVALID_CHAR":
-            raise SyntaxError('Error: Invalid syntax: "%s".' % token.value)
-        else:
+        elif token.type == "NAME":
             parent_node.children.append(current_node)
+        else:
+            raise SyntaxError('Error: Invalid syntax: "%s".' % token.value)
 
     return parents[0]
 
@@ -121,7 +118,7 @@ def get_name(node: Node) -> bool:
     """
     name = node.token.value.lower()
     if name == "exit":
-        sys_exit(0)
+        raise KeyboardInterrupt
     if name == "random":
         return choice((True, False))
     return RUNTIME_VARS[name]
@@ -211,38 +208,5 @@ def run_code(line: str) -> str:
         return error.args[0]
     except KeyError as error:
         return 'Error: Undefined name "%s".' % error.args[0]
-
-
-def setup_cli() -> ArgumentParser:
-    """Set up and define the parser and command line flags for the app."""
-    parser = ArgumentParser(prog=__program__)
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-v", "--version", action="store_true", help="Print %(prog)s's version number."
-    )
-    group.add_argument(
-        "-e", "--expr", default="", help="Print the result of %(dest)s and exit."
-    )
-    return parser
-
-
-def main() -> int:
-    """Parse the command line args and run the app accordingly."""
-    args = setup_cli().parse_args()
-
-    if args.version:
-        print("%s v%s" % (__program__, __version__))
-    elif args.expr:
-        print(run_code(args.expr))
-    else:
-        print(
-            '%s v%s running on %s.\nPress Ctrl+C or enter "exit" to exit.'
-            % (__program__, __version__, platform)
-        )
-        while True:
-            try:
-                print(run_code(input("%s " % PROMPT)))
-            except KeyboardInterrupt:
-                break
-
-    return 0
+    except IndexError:
+        return ""
