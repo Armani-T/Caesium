@@ -73,7 +73,7 @@ Basic operators, together with the 2 Boolean values, are the building blocks of 
 
 ##### 1. `NOT`
 
-`NOT` takes  one value and flips its value. `NOT` can also be written as `!`. Its operations can be summarised as:
+`NOT` takes a value and flips its value. `NOT` can also be written as `!`. Its operations can be summarised as:
 
 Expression | Result |
 |:---:|:---:|
