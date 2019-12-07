@@ -13,6 +13,7 @@ venv/
 pytest.ini
 pyproject.toml
 
+# Package Cruft
 caesium_lang.egg-info/
 build/
 dist/

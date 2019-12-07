@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Build Status](https://travis-ci.com/Armani-T/Caesium.svg?branch=master)](https://travis-ci.com/Armani-T/Caesium)
 
-Caesium is a simple language built to help myself (and others) learn about and understand how Boolean algebra works. To this end, it can evaluate some 
+Caesium is a simple language built to help myself (and others) learn about and understand how Boolean algebra works. It does this by providing an interpreter for Boolean algebra.
 
 ## Installation
 
@@ -20,7 +20,7 @@ Example:
 
 ```
 $ caesium
-caesium v1.1.0 running on win32.
+caesium v1.2.0 running on win32.
 Press Ctrl+C or type "exit" to quit.
 Cs>
 ```
@@ -29,7 +29,7 @@ If you want to close the interpreter now, skip down [here](#Exiting) to learn ho
 
 ### Expressions
 
-An expression is any valid code which returns a value. In Caesium's case, that means that all valid code since all valid code must be an expression. Expressions are evaluated right to left unless brackets (`()`) are used.
+An expression is any valid code which can be turned into a single value. With the exception of the `exit` keyword, all valid code is made up of expressions. Expressions are evaluated right to left by default unless brackets (`()`) are used.
 
 ### Values
 
@@ -153,7 +153,7 @@ Examples:
 ```
 Cs> quux
 Undefined name "quux".
-Cs> random/  # Meant to say "random"
+Cs> random/  # Here I'm supposed to write "random"
 Invalid syntax: "/".
 ```
 

@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 
 import caesium
@@ -34,7 +32,7 @@ import caesium
         ),
     ),
 )
-def test_do_or(tree: caesium.Node, expected: bool) -> None:
+def test_do_or(tree, expected):
     assert caesium.do_or(tree) is expected
 
 
@@ -70,7 +68,7 @@ def test_do_or(tree: caesium.Node, expected: bool) -> None:
         ),
     ),
 )
-def test_do_and(tree: caesium.Node, expected: bool) -> None:
+def test_do_and(tree, expected):
     assert caesium.do_and(tree) is expected
 
 
@@ -106,7 +104,7 @@ def test_do_and(tree: caesium.Node, expected: bool) -> None:
         ),
     ),
 )
-def test_do_xor(tree: caesium.Node, expected: bool) -> None:
+def test_do_xor(tree, expected):
     assert caesium.do_xor(tree) is expected
 
 
@@ -181,7 +179,7 @@ def test_do_xor(tree: caesium.Node, expected: bool) -> None:
         ),
     ),
 )
-def test_visit_tree(tree: caesium.Node, expected: bool):
+def test_visit_tree(tree, expected):
     assert caesium.visit_tree(tree) is expected
 
 
@@ -190,7 +188,7 @@ def test_visit_tree(tree: caesium.Node, expected: bool):
     "flags,attr_name",
     ((["-v"], "version"), (["--expr", "true ^ false | 0 & 1"], "expr")),
 )
-def test_valid_cli_flags(flags: List[str], attr_name: str) -> None:
+def test_valid_cli_flags(flags, attr_name):
     arg_parser = caesium.setup_cli()
     args = arg_parser.parse_args(flags)
     assert getattr(args, attr_name)
@@ -198,7 +196,7 @@ def test_valid_cli_flags(flags: List[str], attr_name: str) -> None:
 
 @pytest.mark.cli
 @pytest.mark.parametrize("flags", (["-a"], ["--wrong"], ["--expr"]))
-def test_invalid_cli_flags(flags: List[str]) -> None:
+def test_invalid_cli_flags(flags):
     with pytest.raises(SystemExit):
         parser = caesium.setup_cli()
         parser.parse_args(flags)
@@ -247,8 +245,8 @@ def test_invalid_cli_flags(flags: List[str]) -> None:
         ),
     ),
 )
-def test_build_ast(line: str, expected_tree: caesium.Node):
-    tokens = caesium.build_ast(
+def test_build_ast(line, expected_tree):
+    tree = caesium.build_ast(
         (
             caesium.Token(match.lastgroup, match.group())
             for match in iter(caesium.MASTER_REGEX.scanner(line).match, None)
@@ -257,7 +255,7 @@ def test_build_ast(line: str, expected_tree: caesium.Node):
             # amount of useless tokens in the stream.
         )
     )
-    assert tokens == expected_tree
+    assert tree == expected_tree
 
 
 if __name__ == "__main__":

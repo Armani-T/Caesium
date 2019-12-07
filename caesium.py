@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
 from collections import namedtuple
+from collections.abc import Iterable
 from re import IGNORECASE, compile as re_compile
 from random import choice
 from sys import platform, exit as sys_exit
-from typing import Iterable
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 
 PROMPT = "Cs>"
 MASTER_REGEX = re_compile(
@@ -37,7 +37,7 @@ Node = namedtuple("Node", ("token", "children"))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
 
 
-def build_ast(tokens: Iterable[Token]) -> Node:
+def build_ast(tokens: Iterable) -> Node:
     """
     Convert the token stream into an AST for parsing.
 
@@ -197,9 +197,10 @@ def run_code(line: str) -> str:
         message.
     """
     try:
+        scanner = MASTER_REGEX.scanner(line)
         tokens = (
             Token(match.lastgroup, match.group())
-            for match in iter(MASTER_REGEX.scanner(line).match, None)
+            for match in iter(scanner.match, None)
             if match.lastgroup not in ("COMMENT", "WHITESPACE")
             # This line just strips out comments and whitespace to reduce the
             # amount of useless tokens in the stream.
