@@ -9,13 +9,10 @@ group.add_argument(
     "-v",
     "--version",
     action="store_true",
-    help="Print %(prog)s's version number."
+    help="Print %(prog)s's version number.",
 )
 group.add_argument(
-    "-e",
-    "--expr",
-    default="",
-    help="Print the result of %(dest)s and exit."
+    "-e", "--expr", default="", help="Print the result of %(dest)s and exit."
 )
 
 args = parser.parse_args()
@@ -26,7 +23,7 @@ elif args.expr:
     print(caesium.run_code(args.expr))
 else:
     print(
-        '%s v%s running on %s.\nPress Ctrl+C or enter "exit" to exit.'
+        '%s version %s running on %s.\nPress Ctrl+C or enter "exit" to exit.'
         % (caesium.__program__, caesium.__version__, platform)
     )
     while True:

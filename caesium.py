@@ -2,11 +2,11 @@
 from collections import namedtuple
 from collections.abc import Iterable
 from re import IGNORECASE, compile as re_compile
-from random import choice
+from random import choice as random_choice
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 MASTER_REGEX = re_compile(
     "|".join(
@@ -26,7 +26,7 @@ MASTER_REGEX = re_compile(
             r"(?P<INVALID_CHAR>.)",
         )
     ),
-    IGNORECASE
+    IGNORECASE,
 )
 
 Token = namedtuple("Token", ("type", "value"))
@@ -48,8 +48,8 @@ def build_ast(tokens: Iterable) -> Node:
     Node
         The root node of the code's AST.
     """
-    parents = [Node(Token("ROOT", ""), [])]
-    # The root node is always the first parent.
+    parents = [Node(None, [])]
+    # NOTE: The node won't be used again anywhere else so I removed the name.
 
     for token in tokens:
         parent_node = parents[-1]
@@ -71,7 +71,7 @@ def build_ast(tokens: Iterable) -> Node:
         else:
             raise SyntaxError('Error: Invalid syntax: "%s".' % token.value)
 
-    return parents[0]
+    return parents[0].children[0]
 
 
 def visit_tree(ast: Node) -> bool:
@@ -96,7 +96,6 @@ def visit_tree(ast: Node) -> bool:
         "NAND": lambda node: not do_and(node),
         "NOR": lambda node: not do_or(node),
         "NOT": lambda node: not visit_tree(node.children[0]),
-        "ROOT": lambda node: visit_tree(node.children[0]),
         "OR": do_or,
         "XOR": do_xor,
     }[ast.token.type](ast)
@@ -120,7 +119,7 @@ def get_name(node: Node) -> bool:
     if name == "exit":
         raise KeyboardInterrupt
     if name == "random":
-        return choice((True, False))
+        return random_choice((True, False))
     return RUNTIME_VARS[name]
 
 
@@ -199,14 +198,17 @@ def run_code(line: str) -> str:
             Token(match.lastgroup, match.group())
             for match in iter(scanner.match, None)
             if match.lastgroup not in ("COMMENT", "WHITESPACE")
-            # This line just strips out comments and whitespace to reduce the
-            # amount of useless tokens in the stream.
+            # NOTE: This line strips out comments and whitespace to
+            #       reduce the amount of useless tokens in the stream.
         )
         ast = build_ast(tokens)
         return str(visit_tree(ast))
+
     except (NameError, SyntaxError) as error:
         return error.args[0]
+
     except KeyError as error:
         return 'Error: Undefined name "%s".' % error.args[0]
+
     except IndexError:
         return ""

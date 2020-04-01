@@ -14,18 +14,16 @@ Caesium is a simple language built to help myself (and others) learn about and u
 
 ### Starting the Prompt
 
-You can start the prompt by running `caesium`.
-
-Example:
+You can start the prompt by typing the word `caesium` into your terminal and pressing Enter. The caesium prompt should start and print something out to the screen like so:
 
 ```
 $ caesium
-caesium v1.2.0 running on win32.
+caesium version 1.3.1 running on win32.
 Press Ctrl+C or type "exit" to quit.
 Cs>
 ```
 
-If you want to close the interpreter now, skip down [here](#Exiting) to learn how to do that.
+If you wish to close the interpreter now, scroll down to the **Exiting** header or press [here](#Exiting) to learn how to do that.
 
 ### Expressions
 
