@@ -113,10 +113,7 @@ def test_do_xor(tree, expected):
     "tree,expected",
     (
         (
-            caesium.Node(
-                caesium.Token("ROOT", ""),
-                [caesium.Node(caesium.Token("NAME", "FalSE"), [])],
-            ),
+            caesium.Node(caesium.Token("NAME", "FalSE"), []),
             False,
         ),
         (
@@ -189,38 +186,25 @@ def test_visit_tree(tree, expected):
     (
         (
             "tRuE",
-            caesium.Node(
-                caesium.Token("ROOT", ""),
-                [caesium.Node(caesium.Token("NAME", "tRuE"), [])],
-            ),
+            caesium.Node(caesium.Token("NAME", "tRuE"), []),
         ),
         (
             "1 ^ 0",
             caesium.Node(
-                caesium.Token("ROOT", ""),
+                caesium.Token("XOR", "^"),
                 [
-                    caesium.Node(
-                        caesium.Token("XOR", "^"),
-                        [
-                            caesium.Node(caesium.Token("NAME", "1"), []),
-                            caesium.Node(caesium.Token("NAME", "0"), []),
-                        ],
-                    )
+                    caesium.Node(caesium.Token("NAME", "1"), []),
+                    caesium.Node(caesium.Token("NAME", "0"), []),
                 ],
             ),
         ),
         (
             "a_var = 0",
             caesium.Node(
-                caesium.Token("ROOT", ""),
+                caesium.Token("EQUALS", "="),
                 [
-                    caesium.Node(
-                        caesium.Token("EQUALS", "="),
-                        [
-                            caesium.Node(caesium.Token("NAME", "a_var"), []),
-                            caesium.Node(caesium.Token("NAME", "0"), []),
-                        ],
-                    )
+                    caesium.Node(caesium.Token("NAME", "a_var"), []),
+                    caesium.Node(caesium.Token("NAME", "0"), []),
                 ],
             ),
         ),
