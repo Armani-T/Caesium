@@ -11,6 +11,7 @@ __version__ = "1.3.1"
 MASTER_REGEX = re_compile(
     "|".join(
         (
+            r"(?P<HELP>\bhelp\b)",
             r"(?P<NOT>\bnot\b|!)",
             r"(?P<OR>\bor\b|\|\||\|)",
             r"(?P<AND>\band\b|&&|&)",
@@ -59,7 +60,7 @@ def build_ast(tokens: Iterable) -> Node:
             current_node.children.append(parent_node.children.pop())
             parent_node.children.append(current_node)
             parents.append(current_node)
-        elif token.type in ("NOT", "LPAREN"):
+        elif token.type in ("NOT", "LPAREN", "HELP"):
             parent_node.children.append(current_node)
             parents.append(current_node)
         elif token.type == "RPAREN":
@@ -98,6 +99,7 @@ def visit_tree(ast: Node) -> bool:
         "NOT": lambda node: not visit_tree(node.children[0]),
         "OR": do_or,
         "XOR": do_xor,
+        "HELP": do_help,
     }[ast.token.type](ast)
 
 
@@ -148,6 +150,7 @@ def do_equals(node: Node) -> bool:
         "nor",
         "exit",
         "random",
+        "help",
         "1",
         "0",
     )
@@ -177,6 +180,20 @@ def do_xor(node: Node) -> bool:
     return any(children) and not all(children)
 
 
+def do_help(node: Node) -> None:
+    raise ZeroDivisionError(
+        {
+            "HELP": "help is used to get short info on what a keyword does.",
+            "NOT": "not is used to flip values (true to false and vice versa",
+            "OR": "or checks if at least one value is true.",
+            "AND": "and checks if both values are true.",
+            "XOR": "xor checks if the two values are not the same.",
+            "NAND": "nand is just short for `not (<value> and <value>)`.",
+            "NOR": "nor is just short for `not (<value> or <value>)`.",
+            "EQUALS": "= is used to bind a name to a value.",
+        }[node.children[0].type]
+    )
+
 def run_code(line: str) -> str:
     """
     Run and return line's string value.
@@ -198,13 +215,13 @@ def run_code(line: str) -> str:
             Token(match.lastgroup, match.group())
             for match in iter(scanner.match, None)
             if match.lastgroup not in ("COMMENT", "WHITESPACE")
-            # NOTE: This line strips out comments and whitespace to
-            #       reduce the amount of useless tokens in the stream.
+            # NOTE: This filter strips out comments and whitespace
+            #       since they are not needed in any other step.
         )
         ast = build_ast(tokens)
         return str(visit_tree(ast))
 
-    except (NameError, SyntaxError) as error:
+    except (NameError, SyntaxError, ZeroDivisionError) as error:
         return error.args[0]
 
     except KeyError as error:
