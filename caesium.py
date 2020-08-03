@@ -169,23 +169,67 @@ def do_equals(node: Node) -> bool:
 
 
 def do_and(node: Node) -> bool:
-    """Evaluate the value of an AND expression."""
+    """
+    Evaluate the value of an AND expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing an and expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     return all((visit_tree(child) for child in node.children))
 
 
 def do_or(node: Node) -> bool:
-    """Evaluate the value of an OR expression."""
+    """
+    Evaluate the value of an OR expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing an or expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     return any((visit_tree(child) for child in node.children))
 
 
 def do_xor(node: Node) -> bool:
-    """Evaluate the value of an XOR expression."""
+    """
+    Evaluate the value of an XOR expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing a xor expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     children = [visit_tree(child) for child in node.children]
     return any(children) and not all(children)
 
 
 def do_help(node: Node) -> None:
-    """Evaluate a help command."""
+    """
+    Evaluate a help command.
+
+    Parameters
+    ----------
+    node
+        The ast representing what the
+        documentation printed should be for.
+    """
     if node.children[0].token.type == "NAME":
         name = node.children[0].token.value.lower()
         raise HelpMessage(
