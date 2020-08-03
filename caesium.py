@@ -6,7 +6,7 @@ from random import choice as random_choice
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "1.3.1"
+__version__ = "1.3.2"
 
 MASTER_REGEX = re_compile(
     "|".join(
@@ -33,6 +33,10 @@ MASTER_REGEX = re_compile(
 Token = namedtuple("Token", ("type", "value"))
 Node = namedtuple("Node", ("token", "children"))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
+
+
+class HelpMessage(Exception):
+    pass
 
 
 def build_ast(tokens: Iterable) -> Node:
@@ -181,16 +185,16 @@ def do_xor(node: Node) -> bool:
 
 
 def do_help(node: Node) -> None:
-    raise ZeroDivisionError(
+    raise HelpMessage(
         {
-            "HELP": "help is used to get short info on what a keyword does.",
-            "NOT": "not is used to flip values (true to false and vice versa",
-            "OR": "or checks if at least one value is true.",
-            "AND": "and checks if both values are true.",
-            "XOR": "xor checks if the two values are not the same.",
-            "NAND": "nand is just short for `not (<value> and <value>)`.",
-            "NOR": "nor is just short for `not (<value> or <value>)`.",
-            "EQUALS": "= is used to bind a name to a value.",
+            "HELP": "`help` is used to get short info on what a keyword does.",
+            "NOT": "`not` is used to flip values (true to false and vice versa",
+            "OR": "`or` checks if at least one value is true.",
+            "AND": "`and` checks if both values are true.",
+            "XOR": "`xor` checks if the two values are not the same.",
+            "NAND": "`nand` is just short for `not (<value> and <value>)`.",
+            "NOR": "`nor` is just short for `not (<value> or <value>)`.",
+            "EQUALS": "`=` is used to bind a name to a value like so: <name> = <value>.",
         }[node.children[0].type]
     )
 
@@ -221,7 +225,7 @@ def run_code(line: str) -> str:
         ast = build_ast(tokens)
         return str(visit_tree(ast))
 
-    except (NameError, SyntaxError, ZeroDivisionError) as error:
+    except (NameError, SyntaxError, HelpMessage) as error:
         return error.args[0]
 
     except KeyError as error:
