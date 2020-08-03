@@ -6,7 +6,7 @@ from random import choice as random_choice
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "1.3.2"
+__version__ = "1.3.3"
 
 MASTER_REGEX = re_compile(
     "|".join(
@@ -185,6 +185,16 @@ def do_xor(node: Node) -> bool:
 
 
 def do_help(node: Node) -> None:
+    """Evaluate a help command."""
+    if node.children[0].token.type == "NAME":
+        name = node.children[0].token.value.lower()
+        raise HelpMessage(
+            "`exit` is used to close the program and return to the terminal"
+            if name == "exit" else
+            "`random` evaluates randomly to either `True` or `False`."
+            if name == "random" else
+            f"{name} = {get_name(node.children[0])}"
+        )
     raise HelpMessage(
         {
             "HELP": "`help` is used to get short info on what a keyword does.",
@@ -194,8 +204,8 @@ def do_help(node: Node) -> None:
             "XOR": "`xor` checks if the two values are not the same.",
             "NAND": "`nand` is just short for `not (<value> and <value>)`.",
             "NOR": "`nor` is just short for `not (<value> or <value>)`.",
-            "EQUALS": "`=` is used to bind a name to a value like so: <name> = <value>.",
-        }[node.children[0].type]
+            "EQUALS": "`=` binds a name to a value like this: <name> = <value>.",
+        }[node.children[0].token.type]
     )
 
 def run_code(line: str) -> str:
