@@ -6,7 +6,7 @@ from random import choice as random_choice
 
 __author__ = "Armani Tallam"
 __program__ = "caesium"
-__version__ = "1.3.1"
+__version__ = "1.3.3"
 
 MASTER_REGEX = re_compile(
     "|".join(
@@ -33,6 +33,10 @@ MASTER_REGEX = re_compile(
 Token = namedtuple("Token", ("type", "value"))
 Node = namedtuple("Node", ("token", "children"))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
+
+
+class HelpMessage(Exception):
+    pass
 
 
 def build_ast(tokens: Iterable) -> Node:
@@ -165,33 +169,87 @@ def do_equals(node: Node) -> bool:
 
 
 def do_and(node: Node) -> bool:
-    """Evaluate the value of an AND expression."""
+    """
+    Evaluate the value of an AND expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing an and expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     return all((visit_tree(child) for child in node.children))
 
 
 def do_or(node: Node) -> bool:
-    """Evaluate the value of an OR expression."""
+    """
+    Evaluate the value of an OR expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing an or expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     return any((visit_tree(child) for child in node.children))
 
 
 def do_xor(node: Node) -> bool:
-    """Evaluate the value of an XOR expression."""
+    """
+    Evaluate the value of an XOR expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing a xor expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     children = [visit_tree(child) for child in node.children]
     return any(children) and not all(children)
 
 
 def do_help(node: Node) -> None:
-    raise ZeroDivisionError(
+    """
+    Evaluate a help command.
+
+    Parameters
+    ----------
+    node
+        The ast representing what the
+        documentation printed should be for.
+    """
+    if node.children[0].token.type == "NAME":
+        name = node.children[0].token.value.lower()
+        raise HelpMessage(
+            "`exit` is used to close the program and return to the terminal"
+            if name == "exit" else
+            "`random` evaluates randomly to either `True` or `False`."
+            if name == "random" else
+            f"{name} = {get_name(node.children[0])}"
+        )
+    raise HelpMessage(
         {
-            "HELP": "help is used to get short info on what a keyword does.",
-            "NOT": "not is used to flip values (true to false and vice versa",
-            "OR": "or checks if at least one value is true.",
-            "AND": "and checks if both values are true.",
-            "XOR": "xor checks if the two values are not the same.",
-            "NAND": "nand is just short for `not (<value> and <value>)`.",
-            "NOR": "nor is just short for `not (<value> or <value>)`.",
-            "EQUALS": "= is used to bind a name to a value.",
-        }[node.children[0].type]
+            "HELP": "`help` is used to get short info on what a keyword does.",
+            "NOT": "`not` is used to flip values (true to false and vice versa",
+            "OR": "`or` checks if at least one value is true.",
+            "AND": "`and` checks if both values are true.",
+            "XOR": "`xor` checks if the two values are not the same.",
+            "NAND": "`nand` is just short for `not (<value> and <value>)`.",
+            "NOR": "`nor` is just short for `not (<value> or <value>)`.",
+            "EQUALS": "`=` binds a name to a value like this: <name> = <value>.",
+        }[node.children[0].token.type]
     )
 
 def run_code(line: str) -> str:
@@ -221,7 +279,7 @@ def run_code(line: str) -> str:
         ast = build_ast(tokens)
         return str(visit_tree(ast))
 
-    except (NameError, SyntaxError, ZeroDivisionError) as error:
+    except (NameError, SyntaxError, HelpMessage) as error:
         return error.args[0]
 
     except KeyError as error:
