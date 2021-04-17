@@ -14,28 +14,31 @@ Caesium is a simple language built to help myself (and others) learn about and u
 
 ### Starting the Prompt
 
-You can start the prompt by running `caesium`.
-
-Example:
+You can start the prompt by typing the word `caesium` into your terminal and pressing Enter. The caesium prompt should start and print something out to the screen like so:
 
 ```
 $ caesium
-caesium v1.2.0 running on win32.
+caesium version 1.3.1 running on win32.
 Press Ctrl+C or type "exit" to quit.
 Cs>
 ```
 
-If you want to close the interpreter now, skip down [here](#Exiting) to learn how to do that.
+If you wish to close the interpreter now, scroll down to the **Exiting** header or press [here](#Exiting) to learn how to do that.
 
 ### Expressions
 
-An expression is any valid code which can be turned into a single value. With the exception of the `exit` keyword, all valid code is made up of expressions. Expressions are evaluated right to left by default unless brackets (`()`) are used.
+An expression is any valid code which can be turned into a single value. All valid code is made 
+up of expressions (except the `exit` keyword which exits the prompt). 
+Expressions are 
+evaluated right to left by default unless brackets (`()`) are used.
 
 ### Values
 
-There are only 2 built-in values: `True` (or `1`) and `False`  (or `0`). Caesium is case-insensitive so it will accept them in upper, lower and even mixed case.
+There are only 2 built-in values: `True` (or `1`) and `False`  (or `0`). Caesium is 
+case-insensitive, so it will accept them in upper, lower or even mixed case.
 
-There is also the `random` keyword which randomly evaluates to either `True` or `False` whenever it's used.
+There is also the `random` keyword which randomly evaluates to either `True` or `False` whenever 
+it is used.
 
 ```
 Cs> TRUE
@@ -54,7 +57,7 @@ True
 
 ### Assignment
 
-You can assign a name to a value by putting a valid identifier on the left, then a `=` and any valid expression. A valid identifier is any string of Unicode text that is neither a keyword nor does it contain whitespace. Assignments can be chained together to define more than one variable at once. Since assignments are expressions, they can be nested within larger expressions.
+You can bind a name to a value by putting a valid name, then a `=` and any valid expression. A valid name is made up of any number of alphanumeric characters and underscores.Valid names also cannot be keywords. Assignments can be chained together to define more than one variable at once. Since assignments are expressions, they can be nested within larger expressions. I wouldn't recommend this though, it makes the line quite unreadable.
 
 ```
 Cs> foo = True
@@ -65,96 +68,110 @@ False
 
 ### Operators
 
-In caesium (and Boolean algebra in general),there are 2 types of operators, *basic* operators and *derived* operators.
+In Boolean algebra,there are 2 types of operators, *basic* operators and *derived* operators.
 
 #### Basic Operators
 
-Basic operators, together with the 2 Boolean values, are the building blocks of Boolean algebra. There are only 3 basic operators:
+Basic operators, together with the 2 Boolean values, are the building blocks of Boolean algebra. Without them, Boolean algebra simply wouldn't exist. There are only 3 basic operators:
 
 ##### 1. `NOT`
 
-`NOT` takes  one value and flips its value. `NOT` can also be written as `!`. Its operations can be summarised as:
+`not` takes a value and flips its value. It can also be written as `!`. Its operations can be summarised as:
 
 Expression | Result |
 |:---:|:---:|
-`NOT True` | `False` |
-`NOT False` | `True` |
+`not True` | `False` |
+`not False` | `True` |
 
 ##### 2. `AND`
 
-`AND` takes 2 arguments and checks if both of them evaluate to `True`. If they both do, it returns `True`, otherwise it returns `False`. `AND` can also be written as `&` or `&&`. `AND`  operations can be summarised as:
+`and` takes 2 arguments and checks if both of them evaluate to `True`. `and` can also be written as `&` or `&&`. `and`  operations can be summarised as:
 
 Expression | Result |
 |:---:|:---:|
-`True AND True` | `True` |
-`True AND False` | `False` |
-`False AND True` | `False` |
-`False AND False` | `False` |
+`True and True` | `True` |
+`True and False` | `False` |
+`False and True` | `False` |
+`False and False` | `False` |
 
 
 ##### 3. `OR`
 
-`OR` also takes 2 arguments and checks if both of them evaluate to `False`. If they both do, it returns `False`, otherwise it returns `True`. `OR` can also be written as `|` or `||`. `OR` operations can be summarised as:
+`or` also takes 2 arguments and checks if both of them evaluate to `False`. `or` can also be written as `|` or `||`. `or` operations can be summarised as:
 
 Expression | Result |
 |:---:|:---:|
-`True OR True` | `True` |
-`True OR False` | `True` |
-`False OR True` | `True` |
-`False OR False` | `False` |
+`True or True` | `True` |
+`True or False` | `True` |
+`False or True` | `True` |
+`False or False` | `False` |
 
 #### Derived Operators
 
-Derived operators are called "derived" because they are derived from the basic operators (i.e: they can be re-written as basic operators). As programmers however, we are too lazy to write them out in full, so we made them as a kind of shorthand.
+Derived operators are called "derived" because they are derived from the basic operators (they can be re-written as basic operators). Since we ,as programmers, are too lazy to write them out in full, we made them as a kind of shorthand.
 
 ##### 1. `XOR`
 
-`XOR`, or **eXclusive OR**, works just like `OR`, but where both values cannot be `True`. `XOR` can also be written as `^`. `XOR` operations can be represented in a table as:
+`xor` (eXclusive OR) works just like `or`, but where both values cannot be `True`. `xor` 
+can also be written as `^`. `xor` operations can be represented in a table as:
 
 Expression | Result |
 |:--------:|:------:|
-`True XOR True` | `False` |
-`True XOR False` | `True` |
-`False XOR True` | `True` |
-`False XOR False` | `False` |
+`True xor True` | `False` |
+`True xor False` | `True` |
+`False xor True` | `True` |
+`False xor False` | `False` |
 
 ##### 2. `NOR`
 
-`NOR`, or **Not OR**, also works just like `OR`, but it negates what `OR` returns. It can also be written as `~`.NAND`NOR` operations can be represented in a table as:
+`nor` (Not OR) also works just like `or`, but it negates what `or` returns. It can also 
+be written as `~`.nand`nor` operations can be represented in a table as:
 
 Expression | Result |
 |:---:|:---:|
-`True NOR True` | `False` |
-`True NOR False` | `False` |
-`False NOR True` | `False` |
-`False NOR False` | `True` |
+`True nor True` | `False` |
+`True nor False` | `False` |
+`False nor True` | `False` |
+`False nor False` | `True` |
 
 ##### 3. `NAND`
 
-`NAND`, or **Not AND**, works exactly like `AND`, but it negates what `AND` returns. It can also be written as `@`. `NAND` operations can be represented in a table as:
+`nand` (Not AND) works exactly like `and`, but it negates what `and` returns. It can also be 
+written as `@`. `nand` operations can be represented in a table as:
 
 Expression | Result |
 |:---:|:---:|
-`True NAND True` | `False` |
-`True NAND False` | `True` |
-`False NAND True` | `True` |
-`False NAND False` | `True` |
+`True nand True` | `False` |
+`True nand False` | `True` |
+`False nand True` | `True` |
+`False nand False` | `True` |
+
+### Help
+
+Rather than having to refer to the README every single time you don't remember what an operator does, caesium comes with the `help` command. It is used to print out a line of explanation about the operator passed to it.
+
+It is useed by typing `help` then the operator in question like so:
+
+```
+Cs> help or
+or checks if at least one value is true.
+```
 
 ### Comments
 
-Comments are lines of text meant for other people to read, rather than for the interpreter to run. If a line begins with a `#` character, the entire line is treated by the interpreter as if it is blank.
+Comments are lines of text meant for other people to read, rather than for the interpreter to run. Everything that comes after a `#` character is treated by the interpreter as if it is not there. So for example, if a line starts with a `#`, the entire line will be treated as if it were blank.
 
 ### Errors
 
-When you try to run code which has a mistake (like a missing bracket), the interpreter complains about your code instead of running it. This is an error. An error is basically the interpreter alerting you that there was something wrong with the code and so it can't run it. Once an error is thrown, you will have to fix whatever is wrong with your expression and rerun it.
+When you try to run code which has a mistake (like a missing bracket), the interpreter complains about your code instead of running it. This is an error. An error is basically the interpreter alerting you that there was something wrong with the code and so it can't run it. Once an error is thrown, you will have to fix whatever is wrong with your expression then rerun it.
 
 Examples:
 
 ```
 Cs> quux
-Undefined name "quux".
+Error: Undefined name "quux".
 Cs> random/  # Here I'm supposed to write "random"
-Invalid syntax: "/".
+Error: Invalid syntax: "/".
 ```
 
 ### Exiting
@@ -163,23 +180,21 @@ Either pressing `Control + C` or typing in `exit` and hitting Enter will cause t
 
 ```
 Cs> exit
+
 $
 ```
 
 * * * * *
 
-## TODO
-
-- An internal help mechanism so that you don't have to keep referring to the README.
-
 ## Development Setup
 
-1. Inside of a fresh virtualenv, install development packages by running `pip install -r requirements-dev.txt`.
-2. Assert everything is working by running  `pytest tests.py` from the project's root dir.
+1. Install development packages by running `pip install -r 
+   requirements-dev.txt` inside a fresh virtualenv (for this project, we use the `.venv` folder).
+2. Assert everything is working by running `pytest tests.py` from the project's root dir.
 
 ## Contributing
 
-1. Crete your feature branch by forking the `develop` branch.
+1. Create your feature branch by forking the `develop` branch.
 3. Commit your changes.
 4. Push to `origin/develop`.
 5. Open a pull request.

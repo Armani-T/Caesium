@@ -1,5 +1,5 @@
 # Python Cruft
-venv/
+.venv/
 *.py[co]
 
 # Tool Cruft
@@ -10,7 +10,6 @@ venv/
 .pytest_cache/
 .pylintrc
 .python-version
-pytest.ini
 pyproject.toml
 
 # Package Cruft
