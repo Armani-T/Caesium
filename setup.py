@@ -25,5 +25,5 @@ setup(
     packages=find_packages(),
     scripts=["caesium"],
     url="https://github.com/Armani-T/Caesium",
-    version="1.2.0",
+    version="1.4.0",
 )
