@@ -6,7 +6,7 @@ Caesium is a simple language built to help myself (and others) learn about and u
 
 ## Installation
 
-1. Ensure that you have a working version of python (You can get python3 from the [official site](https://www.python.org/downloads/) if you don't have it or want to upgrade). Any python version >= 3.4.0 should work.
+1. Ensure that you have a working version of python (You can get python3 from the [official site](https://www.python.org/downloads/) if you don't have it or want to upgrade). Any python version >= 3.6.0 is officially supported so it should work. Older versions of python3 will probably work but they are not officially supported so use them at your own risk.
 2. Install caesium using pip by running `pip install caesium-lang` from the command line.
 3. Test it out by running the command `caesium` in your command line.
 
@@ -27,17 +27,17 @@ If you wish to close the interpreter now, scroll down to the **Exiting** header 
 
 ### Expressions
 
-An expression is any valid code which can be turned into a single value. All valid code is made 
-up of expressions (except the `exit` keyword which exits the prompt). 
-Expressions are 
+An expression is any valid code which can be turned into a single value. All valid code is made
+up of expressions (except the `exit` keyword which exits the prompt).
+Expressions are
 evaluated right to left by default unless brackets (`()`) are used.
 
 ### Values
 
-There are only 2 built-in values: `True` (or `1`) and `False`  (or `0`). Caesium is 
+There are only 2 built-in values: `True` (or `1`) and `False`  (or `0`). Caesium is
 case-insensitive, so it will accept them in upper, lower or even mixed case.
 
-There is also the `random` keyword which randomly evaluates to either `True` or `False` whenever 
+There is also the `random` keyword which randomly evaluates to either `True` or `False` whenever
 it is used.
 
 ```
@@ -112,7 +112,7 @@ Derived operators are called "derived" because they are derived from the basic o
 
 ##### 1. `XOR`
 
-`xor` (eXclusive OR) works just like `or`, but where both values cannot be `True`. `xor` 
+`xor` (eXclusive OR) works just like `or`, but where both values cannot be `True`. `xor`
 can also be written as `^`. `xor` operations can be represented in a table as:
 
 Expression | Result |
@@ -124,7 +124,7 @@ Expression | Result |
 
 ##### 2. `NOR`
 
-`nor` (Not OR) also works just like `or`, but it negates what `or` returns. It can also 
+`nor` (Not OR) also works just like `or`, but it negates what `or` returns. It can also
 be written as `~`.nand`nor` operations can be represented in a table as:
 
 Expression | Result |
@@ -136,7 +136,7 @@ Expression | Result |
 
 ##### 3. `NAND`
 
-`nand` (Not AND) works exactly like `and`, but it negates what `and` returns. It can also be 
+`nand` (Not AND) works exactly like `and`, but it negates what `and` returns. It can also be
 written as `@`. `nand` operations can be represented in a table as:
 
 Expression | Result |
@@ -188,7 +188,7 @@ $
 
 ## Development Setup
 
-1. Install development packages by running `pip install -r 
+1. Install development packages by running `pip install -r
    requirements-dev.txt` inside a fresh virtualenv (for this project, we use the `.venv` folder).
 2. Assert everything is working by running `pytest tests.py` from the project's root dir.
 
