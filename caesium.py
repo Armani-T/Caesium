@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
+from argparse import ArgumentParser, Namespace
 from collections import namedtuple
 from collections.abc import Iterable
 from re import IGNORECASE, compile as re_compile
 from random import choice as random_choice
+from sys import platform
 
 __author__ = "Armani Tallam"
-__program__ = "caesium"
+__program__ = "Caesium"
 __version__ = "1.3.3"
 
 MASTER_REGEX = re_compile(
@@ -252,6 +253,7 @@ def do_help(node: Node) -> None:
         }[node.children[0].token.type]
     )
 
+
 def run_code(line: str) -> str:
     """
     Run and return line's string value.
@@ -274,7 +276,7 @@ def run_code(line: str) -> str:
             for match in iter(scanner.match, None)
             if match.lastgroup not in ("COMMENT", "WHITESPACE")
             # NOTE: This filter strips out comments and whitespace
-            #       since they are not needed in any other step.
+            #       since they are not needed.
         )
         ast = build_ast(tokens)
         return str(visit_tree(ast))
@@ -287,3 +289,58 @@ def run_code(line: str) -> str:
 
     except IndexError:
         return ""
+
+
+def parse_args() -> Namespace:
+    """
+    Make the command line argument parser and use it to parse any
+    flags passed to the program.
+
+    Returns
+    -------
+    Namespace
+        Where any modifying flags passed in to the program are held.
+    """
+    parser = ArgumentParser(prog=__program__)
+    only_group = parser.add_mutually_exclusive_group()
+    only_group.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        help="Print %(prog)s's version number.",
+    )
+    only_group.add_argument(
+        "-e", "--expr", default="", help="Print the result of %(dest)s and exit."
+    )
+    return parser.parse_args()
+
+
+def start_prompt() -> int:
+    """
+    Run the command line interpreter by setting up the command line
+    argument parser and the main loop for the prompt.
+
+    Returns
+    -------
+    int
+        The return status of the entire program.
+    """
+
+    args = parse_args()
+    if args.version:
+        print("%s v%s" % (__program__, __version__))
+    elif args.expr:
+        print(run_code(args.expr))
+    else:
+        print(
+            '%s version %s running on %s.\nPress Ctrl+C or enter "exit" to exit.'
+            % (__program__, __version__, platform)
+        )
+        while True:
+            # noinspection PyBroadException
+            try:
+                print(run_code(input("Cs> ")))
+            except KeyboardInterrupt:
+                return 0
+            except Exception:
+                break
