@@ -1,8 +1,10 @@
 dist: xenial
 language: python
 python:
-  - "3.4.0"
-  - "3.6.1"
+  - "3.6.0"
+  - "3.7"
+  - "3.8"
+  - "3.9"
   - "nightly"
 
 before_install:
