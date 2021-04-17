@@ -235,10 +235,10 @@ def do_help(node: Node) -> None:
         name = node.children[0].token.value.lower()
         raise HelpMessage(
             "`exit` is used to close the program and return to the terminal"
-            if name == "exit" else
-            "`random` evaluates randomly to either `True` or `False`."
-            if name == "random" else
-            f"{name} = {get_name(node.children[0])}"
+            if name == "exit"
+            else "`random` evaluates randomly to either `True` or `False`."
+            if name == "random"
+            else f"{name} = {get_name(node.children[0])}"
         )
     raise HelpMessage(
         {
@@ -310,7 +310,10 @@ def parse_args() -> Namespace:
         help="Print %(prog)s's version number.",
     )
     only_group.add_argument(
-        "-e", "--expr", default="", help="Print the result of %(dest)s and exit."
+        "-e",
+        "--expr",
+        default="",
+        help="Print the result of %(dest)s and exit.",
     )
     return parser.parse_args()
 
