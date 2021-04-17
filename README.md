@@ -27,13 +27,18 @@ If you wish to close the interpreter now, scroll down to the **Exiting** header 
 
 ### Expressions
 
-An expression is any valid code which can be turned into a single value. With the exception of the `exit` keyword, all valid code is made up of expressions. Expressions are evaluated right to left by default unless brackets (`()`) are used.
+An expression is any valid code which can be turned into a single value. All valid code is made 
+up of expressions (except the `exit` keyword which exits the prompt). 
+Expressions are 
+evaluated right to left by default unless brackets (`()`) are used.
 
 ### Values
 
-There are only 2 built-in values: `True` (or `1`) and `False`  (or `0`). Caesium is case-insensitive so it will accept them in upper, lower and even mixed case.
+There are only 2 built-in values: `True` (or `1`) and `False`  (or `0`). Caesium is 
+case-insensitive, so it will accept them in upper, lower or even mixed case.
 
-There is also the `random` keyword which randomly evaluates to either `True` or `False` whenever it is used.
+There is also the `random` keyword which randomly evaluates to either `True` or `False` whenever 
+it is used.
 
 ```
 Cs> TRUE
@@ -107,7 +112,8 @@ Derived operators are called "derived" because they are derived from the basic o
 
 ##### 1. `XOR`
 
-`xor`, or **eXclusive OR**, works just like `or`, but where both values cannot be `True`. `xor` can also be written as `^`. `xor` operations can be represented in a table as:
+`xor` (eXclusive OR) works just like `or`, but where both values cannot be `True`. `xor` 
+can also be written as `^`. `xor` operations can be represented in a table as:
 
 Expression | Result |
 |:--------:|:------:|
@@ -118,7 +124,8 @@ Expression | Result |
 
 ##### 2. `NOR`
 
-`nor`, or **Not OR**, also works just like `or`, but it negates what `or` returns. It can also be written as `~`.nand`nor` operations can be represented in a table as:
+`nor` (Not OR) also works just like `or`, but it negates what `or` returns. It can also 
+be written as `~`.nand`nor` operations can be represented in a table as:
 
 Expression | Result |
 |:---:|:---:|
@@ -129,7 +136,8 @@ Expression | Result |
 
 ##### 3. `NAND`
 
-`nand`, or **Not AND**, works exactly like `and`, but it negates what `and` returns. It can also be written as `@`. `nand` operations can be represented in a table as:
+`nand` (Not AND) works exactly like `and`, but it negates what `and` returns. It can also be 
+written as `@`. `nand` operations can be represented in a table as:
 
 Expression | Result |
 |:---:|:---:|
@@ -180,12 +188,13 @@ $
 
 ## Development Setup
 
-1. Inside of a fresh virtualenv, install development packages by running `pip install -r requirements-dev.txt`.
-2. Assert everything is working by running  `pytest tests.py` from the project's root dir.
+1. Install development packages by running `pip install -r 
+   requirements-dev.txt` inside a fresh virtualenv (for this project, we use the `.venv` folder).
+2. Assert everything is working by running `pytest tests.py` from the project's root dir.
 
 ## Contributing
 
-1. Crete your feature branch by forking the `develop` branch.
+1. Create your feature branch by forking the `develop` branch.
 3. Commit your changes.
 4. Push to `origin/develop`.
 5. Open a pull request.
