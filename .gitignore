@@ -1,5 +1,5 @@
 # Python Cruft
-venv/
+.venv/
 *.py[co]
 
 # Tool Cruft
