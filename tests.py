@@ -113,10 +113,7 @@ def test_do_xor(tree, expected):
     "tree,expected",
     (
         (
-            caesium.Node(
-                caesium.Token("ROOT", ""),
-                [caesium.Node(caesium.Token("NAME", "FalSE"), [])],
-            ),
+            caesium.Node(caesium.Token("NAME", "FalSE"), []),
             False,
         ),
         (
@@ -183,63 +180,31 @@ def test_visit_tree(tree, expected):
     assert caesium.visit_tree(tree) is expected
 
 
-@pytest.mark.cli
-@pytest.mark.parametrize(
-    "flags,attr_name",
-    ((["-v"], "version"), (["--expr", "true ^ false | 0 & 1"], "expr")),
-)
-def test_valid_cli_flags(flags, attr_name):
-    arg_parser = caesium.setup_cli()
-    args = arg_parser.parse_args(flags)
-    assert getattr(args, attr_name)
-
-
-@pytest.mark.cli
-@pytest.mark.parametrize("flags", (["-a"], ["--wrong"], ["--expr"]))
-def test_invalid_cli_flags(flags):
-    with pytest.raises(SystemExit):
-        parser = caesium.setup_cli()
-        parser.parse_args(flags)
-
-
 @pytest.mark.ast
 @pytest.mark.parametrize(
     "line,expected_tree",
     (
         (
             "tRuE",
-            caesium.Node(
-                caesium.Token("ROOT", ""),
-                [caesium.Node(caesium.Token("NAME", "tRuE"), [])],
-            ),
+            caesium.Node(caesium.Token("NAME", "tRuE"), []),
         ),
         (
             "1 ^ 0",
             caesium.Node(
-                caesium.Token("ROOT", ""),
+                caesium.Token("XOR", "^"),
                 [
-                    caesium.Node(
-                        caesium.Token("XOR", "^"),
-                        [
-                            caesium.Node(caesium.Token("NAME", "1"), []),
-                            caesium.Node(caesium.Token("NAME", "0"), []),
-                        ],
-                    )
+                    caesium.Node(caesium.Token("NAME", "1"), []),
+                    caesium.Node(caesium.Token("NAME", "0"), []),
                 ],
             ),
         ),
         (
             "a_var = 0",
             caesium.Node(
-                caesium.Token("ROOT", ""),
+                caesium.Token("EQUALS", "="),
                 [
-                    caesium.Node(
-                        caesium.Token("EQUALS", "="),
-                        [
-                            caesium.Node(caesium.Token("NAME", "a_var"), []),
-                            caesium.Node(caesium.Token("NAME", "0"), []),
-                        ],
-                    )
+                    caesium.Node(caesium.Token("NAME", "a_var"), []),
+                    caesium.Node(caesium.Token("NAME", "0"), []),
                 ],
             ),
         ),
