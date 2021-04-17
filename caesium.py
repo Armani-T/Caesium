@@ -1,19 +1,18 @@
-#!/usr/bin/env python3
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from collections import namedtuple
 from collections.abc import Iterable
 from re import IGNORECASE, compile as re_compile
-from random import choice
-from sys import platform, exit as sys_exit
+from random import choice as random_choice
+from sys import platform
 
 __author__ = "Armani Tallam"
-__program__ = "caesium"
-__version__ = "1.2.0"
+__program__ = "Caesium"
+__version__ = "1.3.4"
 
-PROMPT = "Cs>"
 MASTER_REGEX = re_compile(
     "|".join(
         (
+            r"(?P<HELP>\bhelp\b)",
             r"(?P<NOT>\bnot\b|!)",
             r"(?P<OR>\bor\b|\|\||\|)",
             r"(?P<AND>\band\b|&&|&)",
@@ -37,6 +36,10 @@ Node = namedtuple("Node", ("token", "children"))
 RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
 
 
+class HelpMessage(Exception):
+    pass
+
+
 def build_ast(tokens: Iterable) -> Node:
     """
     Convert the token stream into an AST for parsing.
@@ -51,8 +54,8 @@ def build_ast(tokens: Iterable) -> Node:
     Node
         The root node of the code's AST.
     """
-    parents = [Node(Token("ROOT", ""), [])]
-    # The root node is always the first parent.
+    parents = [Node(None, [])]
+    # NOTE: The node won't be used again anywhere else so I removed the name.
 
     for token in tokens:
         parent_node = parents[-1]
@@ -62,19 +65,19 @@ def build_ast(tokens: Iterable) -> Node:
             current_node.children.append(parent_node.children.pop())
             parent_node.children.append(current_node)
             parents.append(current_node)
-        elif token.type in ("NOT", "LPAREN"):
+        elif token.type in ("NOT", "LPAREN", "HELP"):
             parent_node.children.append(current_node)
             parents.append(current_node)
         elif token.type == "RPAREN":
             parent = parents.pop()
             while parent.token.type != "LPAREN":
                 parent = parents.pop()
-        elif token.type == "INVALID_CHAR":
-            raise SyntaxError('Error: Invalid syntax: "%s".' % token.value)
-        else:
+        elif token.type == "NAME":
             parent_node.children.append(current_node)
+        else:
+            raise SyntaxError('Error: Invalid syntax: "%s".' % token.value)
 
-    return parents[0]
+    return parents[0].children[0]
 
 
 def visit_tree(ast: Node) -> bool:
@@ -99,9 +102,9 @@ def visit_tree(ast: Node) -> bool:
         "NAND": lambda node: not do_and(node),
         "NOR": lambda node: not do_or(node),
         "NOT": lambda node: not visit_tree(node.children[0]),
-        "ROOT": lambda node: visit_tree(node.children[0]),
         "OR": do_or,
         "XOR": do_xor,
+        "HELP": do_help,
     }[ast.token.type](ast)
 
 
@@ -121,9 +124,9 @@ def get_name(node: Node) -> bool:
     """
     name = node.token.value.lower()
     if name == "exit":
-        sys_exit(0)
+        raise KeyboardInterrupt
     if name == "random":
-        return choice((True, False))
+        return random_choice((True, False))
     return RUNTIME_VARS[name]
 
 
@@ -152,6 +155,7 @@ def do_equals(node: Node) -> bool:
         "nor",
         "exit",
         "random",
+        "help",
         "1",
         "0",
     )
@@ -166,19 +170,88 @@ def do_equals(node: Node) -> bool:
 
 
 def do_and(node: Node) -> bool:
-    """Evaluate the value of an AND expression."""
+    """
+    Evaluate the value of an AND expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing an and expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     return all((visit_tree(child) for child in node.children))
 
 
 def do_or(node: Node) -> bool:
-    """Evaluate the value of an OR expression."""
+    """
+    Evaluate the value of an OR expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing an or expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     return any((visit_tree(child) for child in node.children))
 
 
 def do_xor(node: Node) -> bool:
-    """Evaluate the value of an XOR expression."""
+    """
+    Evaluate the value of an XOR expression.
+
+    Parameters
+    ----------
+    node
+        The ast representing a xor expression.
+
+    Returns
+    -------
+    bool
+        The expression's evaluated value.
+    """
     children = [visit_tree(child) for child in node.children]
     return any(children) and not all(children)
+
+
+def do_help(node: Node) -> None:
+    """
+    Evaluate a help command.
+
+    Parameters
+    ----------
+    node
+        The ast representing what the
+        documentation printed should be for.
+    """
+    if node.children[0].token.type == "NAME":
+        name = node.children[0].token.value.lower()
+        raise HelpMessage(
+            "`exit` is used to close the program and return to the terminal"
+            if name == "exit"
+            else "`random` evaluates randomly to either `True` or `False`."
+            if name == "random"
+            else f"{name} = {get_name(node.children[0])}"
+        )
+    raise HelpMessage(
+        {
+            "HELP": "`help` is used to get short info on what a keyword does.",
+            "NOT": "`not` is used to flip values (true to false and vice versa",
+            "OR": "`or` checks if at least one value is true.",
+            "AND": "`and` checks if both values are true.",
+            "XOR": "`xor` checks if the two values are not the same.",
+            "NAND": "`nand` is just short for `not (<value> and <value>)`.",
+            "NOR": "`nor` is just short for `not (<value> or <value>)`.",
+            "EQUALS": "`=` binds a name to a value like this: <name> = <value>.",
+        }[node.children[0].token.type]
+    )
 
 
 def run_code(line: str) -> str:
@@ -202,47 +275,75 @@ def run_code(line: str) -> str:
             Token(match.lastgroup, match.group())
             for match in iter(scanner.match, None)
             if match.lastgroup not in ("COMMENT", "WHITESPACE")
-            # This line just strips out comments and whitespace to reduce the
-            # amount of useless tokens in the stream.
+            # NOTE: This filter strips out comments and whitespace
+            #       since they are not needed.
         )
         ast = build_ast(tokens)
         return str(visit_tree(ast))
-    except (NameError, SyntaxError) as error:
+
+    except (NameError, SyntaxError, HelpMessage) as error:
         return error.args[0]
+
     except KeyError as error:
         return 'Error: Undefined name "%s".' % error.args[0]
 
+    except IndexError:
+        return ""
 
-def setup_cli() -> ArgumentParser:
-    """Set up and define the parser and command line flags for the app."""
+
+def parse_args() -> Namespace:
+    """
+    Make the command line argument parser and use it to parse any
+    flags passed to the program.
+
+    Returns
+    -------
+    Namespace
+        Where any modifying flags passed in to the program are held.
+    """
     parser = ArgumentParser(prog=__program__)
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-v", "--version", action="store_true", help="Print %(prog)s's version number."
+    only_group = parser.add_mutually_exclusive_group()
+    only_group.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        help="Print %(prog)s's version number.",
     )
-    group.add_argument(
-        "-e", "--expr", default="", help="Print the result of %(dest)s and exit."
+    only_group.add_argument(
+        "-e",
+        "--expr",
+        default="",
+        help="Print the result of %(dest)s and exit.",
     )
-    return parser
+    return parser.parse_args()
 
 
-def main() -> int:
-    """Parse the command line args and run the app accordingly."""
-    args = setup_cli().parse_args()
+def start_prompt() -> int:
+    """
+    Run the command line interpreter by setting up the command line
+    argument parser and the main loop for the prompt.
 
+    Returns
+    -------
+    int
+        The return status of the entire program.
+    """
+
+    args = parse_args()
     if args.version:
         print("%s v%s" % (__program__, __version__))
     elif args.expr:
         print(run_code(args.expr))
     else:
         print(
-            '%s v%s running on %s.\nPress Ctrl+C or enter "exit" to exit.'
+            '%s version %s running on %s.\nPress Ctrl+C or enter "exit" to exit.'
             % (__program__, __version__, platform)
         )
         while True:
+            # noinspection PyBroadException
             try:
-                print(run_code(input("%s " % PROMPT)))
+                print(run_code(input("Cs> ")))
             except KeyboardInterrupt:
+                return 0
+            except Exception:
                 break
-
-    return 0
