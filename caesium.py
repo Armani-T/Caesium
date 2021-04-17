@@ -7,7 +7,7 @@ from sys import platform
 
 __author__ = "Armani Tallam"
 __program__ = "Caesium"
-__version__ = "1.3.3"
+__version__ = "1.3.4"
 
 MASTER_REGEX = re_compile(
     "|".join(
