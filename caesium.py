@@ -33,7 +33,10 @@ MASTER_REGEX = re_compile(
 
 Token = namedtuple("Token", ("type", "value"))
 Node = namedtuple("Node", ("token", "children"))
-RUNTIME_VARS = {"true": True, "1": True, "false": False, "0": False}
+
+runtime_vars = {
+    "true": True, "1": True, "on": True, "false": False, "0": False, "off": True,
+}
 
 
 class HelpMessage(Exception):
@@ -127,7 +130,7 @@ def get_name(node: Node) -> bool:
         raise KeyboardInterrupt
     if name == "random":
         return random_choice((True, False))
-    return RUNTIME_VARS[name]
+    return runtime_vars[name]
 
 
 def do_equals(node: Node) -> bool:
@@ -165,7 +168,7 @@ def do_equals(node: Node) -> bool:
     if var_name in keywords:
         raise NameError('Error: Name "%s" is reserved.' % var_name)
 
-    RUNTIME_VARS[var_name] = var_value
+    runtime_vars[var_name] = var_value
     return var_value
 
 
