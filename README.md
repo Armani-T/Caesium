@@ -4,6 +4,8 @@
 
 Caesium is a simple language built to help myself (and others) learn about and understand how Boolean algebra works. It does this by providing an interpreter for Boolean algebra.
 
+> **NOTE**: This repo has been archived.
+
 ## Installation
 
 1. Ensure that you have a working version of python (You can get python3 from the [official site](https://www.python.org/downloads/) if you don't have it or want to upgrade). Any python version >= 3.6.0 is officially supported so it should work. Older versions of python3 will probably work but they are not officially supported so use them at your own risk.
